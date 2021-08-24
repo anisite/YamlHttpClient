@@ -1,0 +1,19 @@
+﻿http_client:
+  backendclient:
+      method: POST
+      url: http://perdu.com #regex de l'url
+      #network: web # web ou RITM
+      #base_uri: 'https://api.infologique.net'
+      headers:
+          Accept: 'application/json'
+      string_content: string
+      json_content: {"key": "val"}
+      form_content:
+            key: val
+
+      # HTTP Basic authentication
+      #auth_basic: 'the-username:the-password'
+      # HTTP Bearer authentication (also called token authentication)
+      #auth_bearer: the-bearer-token
+      # Microsoft NTLM authentication
+      #auth_ntlm: 'the-username:the-password'
