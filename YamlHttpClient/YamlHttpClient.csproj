@@ -7,8 +7,8 @@
 		<PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
 		<Authors>anisite</Authors>
 		<Company>Infologique.net</Company>
-		<PackageProjectUrl>https://github.com/anisite/YamlHttpClient.net</PackageProjectUrl>
-		<RepositoryUrl>https://github.com/anisite/YamlHttpClient.net</RepositoryUrl>
+		<PackageProjectUrl>https://github.com/anisite/YamlHttpClient</PackageProjectUrl>
+		<RepositoryUrl>https://github.com/anisite/YamlHttpClient</RepositoryUrl>
 		<PackageLicenseFile>LICENSE</PackageLicenseFile>
 		<Version>1.0.0-alpha1</Version>
 		<Description>Yaml config based .net HttpClient</Description>
