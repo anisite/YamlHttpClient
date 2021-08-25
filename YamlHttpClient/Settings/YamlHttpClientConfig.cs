@@ -1,9 +1,9 @@
 ﻿using System.Collections.Generic;
 using YamlDotNet.Serialization;
 
-namespace YamlHttpClient
+namespace YamlHttpClient.Settings
 {
-    public class YamlHttpClientConfig
+    internal class YamlHttpClientConfig
     {
         [YamlMember(Alias = "http_client")]
         public Dictionary<string, HttpClientSettings> HttpClient { get; set; }

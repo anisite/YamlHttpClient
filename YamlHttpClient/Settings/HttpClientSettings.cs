@@ -3,17 +3,8 @@ using System.Collections.Generic;
 using System.Net.Http;
 using YamlDotNet.Serialization;
 
-namespace YamlHttpClient
+namespace YamlHttpClient.Settings
 {
-    /*
-     *   
-          backend.client:
-              scope: 'https://api\.infologique\.net' #regex de l'url
-              network: web # web ou RITM
-              #base_uri: 'https://api.infologique.net'
-              headers:
-                  Accept: 'application/json'
-     * */
     public class HttpClientSettings
     {
         [YamlMember(Alias = "method")]

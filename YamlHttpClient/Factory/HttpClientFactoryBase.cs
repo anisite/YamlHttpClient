@@ -4,6 +4,7 @@ using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
 using YamlHttpClient;
+using YamlHttpClient.Interfaces;
 
 namespace YamlHttpClient.Factory
 {

@@ -9,6 +9,8 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 using YamlHttpClient.Factory;
+using YamlHttpClient.Interfaces;
+using YamlHttpClient.Settings;
 using YamlHttpClient.Utils;
 
 namespace YamlHttpClient

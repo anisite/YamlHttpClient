@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Net.Http;
+using YamlHttpClient.Interfaces;
+using YamlHttpClient.Settings;
 
 namespace YamlHttpClient.Factory
 {
@@ -20,7 +22,7 @@ namespace YamlHttpClient.Factory
 
         public HttpClient HttpClient => GetHttpClient();
 
-        public HttpMessageHandler HttpMessageHandler => HttpRunTimeSeetings.Current?.HttpMessageHandler ?? _httpMessageHandler?.Value;
+        public HttpMessageHandler HttpMessageHandler => HttpRunTimeSettings.Current?.HttpMessageHandler ?? _httpMessageHandler?.Value;
         public string BaseUrl { get; set; }
         public bool IsProxy { get; set; }
 
@@ -29,7 +31,7 @@ namespace YamlHttpClient.Factory
             _baseFactory = baseFactory;
             BaseUrl = baseUrl;
             IsProxy = isProxy;
-            _connectionLeaseTimeout = HttpRunTimeSeetings.Current?.ConnectionLeaseTimeout ?? TimeSpan.FromMinutes(1);
+            _connectionLeaseTimeout = HttpRunTimeSettings.Current?.ConnectionLeaseTimeout ?? TimeSpan.FromMinutes(1);
             _httpClient = new Lazy<HttpClient>(CreateHttpClient);
             _httpMessageHandler = new Lazy<HttpMessageHandler>(() => baseFactory.CreateMessageHandlerInternal(isProxy ? baseUrl : null));
         }

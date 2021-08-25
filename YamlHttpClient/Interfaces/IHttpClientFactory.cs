@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Net.Http;
 
-namespace YamlHttpClient
+namespace YamlHttpClient.Interfaces
 {
     public interface IYamlHttpClientFactory : IDisposable
     {
