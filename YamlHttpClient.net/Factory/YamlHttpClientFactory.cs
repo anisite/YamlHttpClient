@@ -48,7 +48,6 @@ namespace YamlHttpClient.Factory
                     .Deserialize<YamlHttpClientConfig>(configFile);
             }
 
-            //_httpClient = new HttpClient(new YamlHttpClientHandler(_config));
             return config.HttpClient[keyConfigName];
         }
 
@@ -68,12 +67,13 @@ namespace YamlHttpClient.Factory
             var msg = new HttpRequestMessage(new HttpMethod(_config.Method),
                                                             _config.Url);
 
+            // String Content
             if (!string.IsNullOrWhiteSpace(_config.StringContent))
             {
                 msg.Content = new StringContent(_config.StringContent);
             }
-
-            if (!(_config.JsonContent is null))
+            // Json Content
+            else if (!(_config.JsonContent is null))
             {
                 var objet = JsonConvert.DeserializeObject<IDictionary<object, object>>(
                                  _config.JsonContent.ToString() ?? string.Empty,
@@ -82,7 +82,12 @@ namespace YamlHttpClient.Factory
                 var json = JsonConvert.SerializeObject(objet);
                 msg.Content = new StringContent(json, Encoding.GetEncoding(_config.Encoding ?? "UTF-8"), "application/json");
             }
+            else
+            {
+                throw new NotImplementedException("Json or String content is mandatory.");
+            }
 
+            // Adding all headers
             foreach (var item in _config.Headers)
             {
                 msg.Headers.TryAddWithoutValidation(item.Key, SS(item.Value, data));

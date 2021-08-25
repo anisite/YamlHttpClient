@@ -3,6 +3,15 @@
 	<PropertyGroup>
 		<TargetFramework>netcoreapp3.1</TargetFramework>
 		<Nullable>enable</Nullable>
+		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+		<PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
+		<Authors>anisite</Authors>
+		<Company>Infologique.net</Company>
+		<PackageProjectUrl>https://github.com/anisite/YamlHttpClient.net</PackageProjectUrl>
+		<RepositoryUrl>https://github.com/anisite/YamlHttpClient.net</RepositoryUrl>
+		<PackageLicenseFile>LICENSE</PackageLicenseFile>
+		<Version>1.0.0-alpha1</Version>
+		<Description>Yaml config based .net HttpClient</Description>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -14,6 +23,13 @@
 		<PackageReference Include="Stubble.Helpers" Version="1.1.3" />
 		<PackageReference Include="System.Collections" Version="4.3.0" />
 		<PackageReference Include="YamlDotNet" Version="11.2.1" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <None Include="..\LICENSE">
+	    <Pack>True</Pack>
+	    <PackagePath></PackagePath>
+	  </None>
 	</ItemGroup>
 
 </Project>

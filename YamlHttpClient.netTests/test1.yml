@@ -6,7 +6,7 @@
           CodeNT: '{{System.CodeNT}}'
           Accept: 'application/json'
       #string_content: string
-      json_content: '{"val1": "{{val1}}"}'
+      json_content: '{"val1": "{{val1}}", "all": "{{{.}}}"}'
       #form_content:
       #      key: val
 
