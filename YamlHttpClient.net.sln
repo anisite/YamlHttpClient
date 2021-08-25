@@ -3,9 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.30717.126
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "YamlHttpClient.net", "YamlHttpClient.net\YamlHttpClient.net.csproj", "{3E0DB415-B59A-4640-8401-72ECA1BB9D9F}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "YamlHttpClient", "YamlHttpClient.net\YamlHttpClient.csproj", "{3E0DB415-B59A-4640-8401-72ECA1BB9D9F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "YamlHttpClient.netTests", "YamlHttpClient.netTests\YamlHttpClient.netTests.csproj", "{937FC231-77F2-46B7-8B91-C745A4F684D4}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "YamlHttpClient.netTests", "YamlHttpClient.netTests\YamlHttpClient.netTests.csproj", "{937FC231-77F2-46B7-8B91-C745A4F684D4}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using YamlDotNet.Serialization;
 
-namespace YamlHttpClient.net
+namespace YamlHttpClient
 {
     public class YamlHttpClientConfig
     {

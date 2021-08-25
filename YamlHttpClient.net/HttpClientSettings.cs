@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Net.Http;
 
-namespace YamlHttpClient.net
+namespace YamlHttpClient
 {
     /*
      *   
@@ -17,7 +17,10 @@ namespace YamlHttpClient.net
     {
         public string Method { get; set; }
         public string Url { get; set; }
+        public string Encoding { get; set; }
         public string StringContent { get; set; }
+        public object JsonContent { get; set; }
+        public object FormContent { get; set; }
         public Dictionary<string, string> Headers { get; set; }
     }
 }

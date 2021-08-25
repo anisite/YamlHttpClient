@@ -1,13 +1,13 @@
 ﻿http_client:
   backendclient:
       method: POST
-      url: http://perdu.com #regex de l'url
+      url: https://ptsv2.com/t/yty/post #regex de l'url
       #network: web # web ou RITM
       #base_uri: 'https://api.infologique.net'
       headers:
           Accept: 'application/json'
-      string_content: string
-      json_content: {"key": "val"}
+      #string_content: string
+      json_content: {"val1": "{val1}"}
       form_content:
             key: val
 
