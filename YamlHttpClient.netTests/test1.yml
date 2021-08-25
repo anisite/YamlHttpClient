@@ -3,7 +3,7 @@
       method: POST
       url: https://ptsv2.com/t/yty/post
       headers:
-          CodeNT: {{Systeme.CodeNT}}
+          CodeNT: '{{System.CodeNT}}'
           Accept: 'application/json'
       #string_content: string
       json_content: '{"val1": "{{val1}}"}'

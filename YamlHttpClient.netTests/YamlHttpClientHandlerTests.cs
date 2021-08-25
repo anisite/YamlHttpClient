@@ -18,7 +18,12 @@ namespace YamlHttpClient.Tests
             var yamlFile = @"C:\Users\infol\Documents\GitHub\YamlHttpClient.net\YamlHttpClient.netTests\test1.yml";
             YamlHttpClientFactory factory = new YamlHttpClientFactory("myHttpCall", yamlFile);
 
-            var response = await factory.AutoCall(new { val1 = "titi" });
+            var response = await factory.AutoCall(
+                new
+                {
+                    val1 = "titi",
+                    System = new { CodeNT = @"mes\cotda05" }
+                });
 
             //Do something with response
         }

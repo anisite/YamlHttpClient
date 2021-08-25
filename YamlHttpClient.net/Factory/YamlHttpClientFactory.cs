@@ -41,7 +41,7 @@ namespace YamlHttpClient.Factory
             using (var configFile = new StreamReader(yamlConfig))
             {
                 var builder = new YamlDotNet.Serialization.DeserializerBuilder()
-                    .WithNamingConvention(YamlDotNet.Serialization.NamingConventions.UnderscoredNamingConvention.Instance)
+                    .WithNamingConvention(YamlDotNet.Serialization.NamingConventions.NullNamingConvention.Instance)
                     .Build();
 
                 config = builder
@@ -76,20 +76,30 @@ namespace YamlHttpClient.Factory
             if (!(_config.JsonContent is null))
             {
                 var objet = JsonConvert.DeserializeObject<IDictionary<object, object>>(
-                                 _config.JsonContent.ToString(),
+                                 _config.JsonContent.ToString() ?? string.Empty,
                                      new JsonConverter[] {
-                                         new JsonCustomConverter(_stubble, data) }
-                                 );
+                                         new JsonCustomConverter(_stubble, data) });
                 var json = JsonConvert.SerializeObject(objet);
                 msg.Content = new StringContent(json, Encoding.GetEncoding(_config.Encoding ?? "UTF-8"), "application/json");
             }
 
             foreach (var item in _config.Headers)
             {
-                msg.Headers.TryAddWithoutValidation(item.Key, item.Value);
+                msg.Headers.TryAddWithoutValidation(item.Key, SS(item.Value, data));
             }
 
             return client.SendAsync(msg);
+        }
+
+        /// <summary>
+        /// Sustitute data with Stubble
+        /// </summary>
+        /// <param name="value">Value with placeholders {{example}}</param>
+        /// <param name="data">Any data object to search from</param>
+        /// <returns></returns>
+        private string SS(string value, object data)
+        {
+            return _stubble.Render(value, data);
         }
     }
 }
