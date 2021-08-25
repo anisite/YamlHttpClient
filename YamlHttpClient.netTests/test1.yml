@@ -1,15 +1,14 @@
 ﻿http_client:
-  backendclient:
+  myHttpCall:
       method: POST
-      url: https://ptsv2.com/t/yty/post #regex de l'url
-      #network: web # web ou RITM
-      #base_uri: 'https://api.infologique.net'
+      url: https://ptsv2.com/t/yty/post
       headers:
+          CodeNT: {{Systeme.CodeNT}}
           Accept: 'application/json'
       #string_content: string
-      json_content: {"val1": "{val1}"}
-      form_content:
-            key: val
+      json_content: '{"val1": "{{val1}}"}'
+      #form_content:
+      #      key: val
 
       # HTTP Basic authentication
       #auth_basic: 'the-username:the-password'

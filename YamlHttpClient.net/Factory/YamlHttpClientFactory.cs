@@ -1,10 +1,14 @@
 ﻿using Newtonsoft.Json;
+using Stubble.Core.Builders;
+using Stubble.Core.Interfaces;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Net.Http;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
+using YamlHttpClient.Utils;
 
 namespace YamlHttpClient.Factory
 {
@@ -15,17 +19,20 @@ namespace YamlHttpClient.Factory
     {
         private readonly HttpClientSettings _config;
         private readonly string _uniqueId;
+        private readonly IStubbleRenderer _stubble;
 
         public YamlHttpClientFactory(string keyConfigName, string yamlConfig)
         {
             _uniqueId = keyConfigName + yamlConfig;
             _config = LoadConfig(keyConfigName, yamlConfig);
+            _stubble = new StubbleBuilder().Build();
         }
 
         public YamlHttpClientFactory(string keyConfigName, string yamlConfig, TimeSpan defaultClientTimeout) : base(defaultClientTimeout)
         {
             _uniqueId = keyConfigName + yamlConfig;
             _config = LoadConfig(keyConfigName, yamlConfig);
+            _stubble = new StubbleBuilder().Build();
         }
 
         private HttpClientSettings LoadConfig(string keyConfigName, string yamlConfig)
@@ -61,18 +68,22 @@ namespace YamlHttpClient.Factory
             var msg = new HttpRequestMessage(new HttpMethod(_config.Method),
                                                             _config.Url);
 
-            if(!string.IsNullOrWhiteSpace(_config.StringContent))
+            if (!string.IsNullOrWhiteSpace(_config.StringContent))
             {
                 msg.Content = new StringContent(_config.StringContent);
             }
 
             if (!(_config.JsonContent is null))
             {
-                //TODO custom JSON serializer pour remplacer les {templates}
-                var json = JsonConvert.SerializeObject(_config.JsonContent);
+                var objet = JsonConvert.DeserializeObject<IDictionary<object, object>>(
+                                 _config.JsonContent.ToString(),
+                                     new JsonConverter[] {
+                                         new JsonCustomConverter(_stubble, data) }
+                                 );
+                var json = JsonConvert.SerializeObject(objet);
                 msg.Content = new StringContent(json, Encoding.GetEncoding(_config.Encoding ?? "UTF-8"), "application/json");
             }
-            msg.Content = new MultipartFormDataContent().Add(;
+
             foreach (var item in _config.Headers)
             {
                 msg.Headers.TryAddWithoutValidation(item.Key, item.Value);

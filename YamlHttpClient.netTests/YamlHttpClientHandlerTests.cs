@@ -15,13 +15,12 @@ namespace YamlHttpClient.Tests
         [TestMethod()]
         public async Task YamlHttpClientHandlerTest()
         {
+            var yamlFile = @"C:\Users\infol\Documents\GitHub\YamlHttpClient.net\YamlHttpClient.netTests\test1.yml";
+            YamlHttpClientFactory factory = new YamlHttpClientFactory("myHttpCall", yamlFile);
 
-            YamlHttpClientFactory factory = new YamlHttpClientFactory("backendclient",
-                                                @"C:\Users\Dany\source\repos\YamlHttpClient.net\YamlHttpClient.netTests\test1.yml"); // can be static
             var response = await factory.AutoCall(new { val1 = "titi" });
 
-
-
+            //Do something with response
         }
     }
 }
