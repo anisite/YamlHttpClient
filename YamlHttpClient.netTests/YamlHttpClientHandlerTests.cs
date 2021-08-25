@@ -15,7 +15,7 @@ namespace YamlHttpClient.Tests
         [TestMethod()]
         public async Task YamlHttpClientHandlerTest()
         {
-            var yamlFile = @"C:\Users\infol\Documents\GitHub\YamlHttpClient.net\YamlHttpClient.netTests\test1.yml";
+            var yamlFile = @"..\..\..\test1.yml";
             
             YamlHttpClientFactory factory = new YamlHttpClientFactory("myHttpCall", yamlFile);
 
