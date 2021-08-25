@@ -2,6 +2,7 @@
   myHttpCall:
       method: POST
       url: https://ptsv2.com/t/yty/post
+      use_default_credentials: true
       headers:
           CodeNT: '{{System.CodeNT}}'
           Accept: 'application/json'

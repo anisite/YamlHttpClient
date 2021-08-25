@@ -26,7 +26,7 @@ namespace YamlHttpClient.Factory
         public string BaseUrl { get; set; }
         public bool IsProxy { get; set; }
 
-        public YamlSafeHttpClient(YamlHttpClientFactoryBase baseFactory, string baseUrl = null, bool isProxy = false)
+        public YamlSafeHttpClient(YamlHttpClientFactoryBase baseFactory, string? baseUrl = null, bool isProxy = false)
         {
             _baseFactory = baseFactory;
             BaseUrl = baseUrl;

@@ -4,6 +4,7 @@ using Stubble.Core.Interfaces;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Net;
 using System.Net.Http;
 using System.Security.Cryptography;
 using System.Text;
@@ -51,8 +52,8 @@ namespace YamlHttpClient
         {
             YamlHttpClientConfig config;
 
-            var builder = new YamlDotNet.Serialization.DeserializerBuilder()
-                .WithNamingConvention(YamlDotNet.Serialization.NamingConventions.NullNamingConvention.Instance)
+            var builder = new DeserializerBuilder()
+                .WithNamingConvention(NullNamingConvention.Instance)
                 .Build();
 
             config = builder
@@ -120,6 +121,26 @@ namespace YamlHttpClient
             }
 
             return client.SendAsync(msg);
+        }
+
+        protected override HttpMessageHandler CreateMessageHandler(string? proxyUrl = null)
+        {
+            var handler = new HttpClientHandler();
+
+            if (!string.IsNullOrEmpty(proxyUrl))
+            {
+                handler = new HttpClientHandler
+                {
+                    UseProxy = true,
+                    Proxy = new WebProxy(proxyUrl),
+                    //AutomaticDecompression = DecompressionMethods.None
+                };
+            }
+
+            handler.UseDefaultCredentials = _config.UseDefaultCredentials;
+            handler.AllowAutoRedirect = true;
+
+            return handler;
         }
 
         /// <summary>

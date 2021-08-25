@@ -79,7 +79,7 @@ namespace YamlHttpClient.Factory
             };
         }
 
-        protected virtual HttpMessageHandler CreateMessageHandler(string proxyUrl = null)
+        protected virtual HttpMessageHandler CreateMessageHandler(string? proxyUrl = null)
         {
             if (!string.IsNullOrEmpty(proxyUrl))
             {
