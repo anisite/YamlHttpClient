@@ -5,7 +5,7 @@ using System.Text;
 using System.Net.Http;
 using System.Threading.Tasks;
 using Arnath.StandaloneHttpClientFactory;
-using YamlHttpClient.Factory;
+using YamlHttpClient;
 
 namespace YamlHttpClient.Tests
 {
@@ -17,7 +17,7 @@ namespace YamlHttpClient.Tests
         {
             var yamlFile = @"../../../test1.yml";
             
-            YamlHttpClientFactory factory = new YamlHttpClientFactory("myHttpCall", yamlFile);
+            YamlHttpClient httpClient = new YamlHttpClient("myHttpCall", yamlFile);
 
             var testObject = new
             {
@@ -25,7 +25,7 @@ namespace YamlHttpClient.Tests
                 System = new { CodeNT = @"mes\cotda05" }
             };
 
-            var response = await factory.AutoCall(testObject);
+            var response = await httpClient.AutoCall(testObject);
 
             //Do something with response
         }

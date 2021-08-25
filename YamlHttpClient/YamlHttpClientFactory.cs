@@ -8,27 +8,28 @@ using System.Net.Http;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
+using YamlHttpClient.Factory;
 using YamlHttpClient.Utils;
 
-namespace YamlHttpClient.Factory
+namespace YamlHttpClient
 {
     /// <summary>
-    /// same url use same HttpClient
+    /// Yaml config based HttpClient
     /// </summary>
-    public class YamlHttpClientFactory : YamlHttpClientFactoryBase
+    public class YamlHttpClient : YamlHttpClientFactoryBase
     {
         private readonly HttpClientSettings _config;
         private readonly string _uniqueId;
         private readonly IStubbleRenderer _stubble;
 
-        public YamlHttpClientFactory(string keyConfigName, string yamlConfig)
+        public YamlHttpClient(string keyConfigName, string yamlConfig)
         {
             _uniqueId = keyConfigName + yamlConfig;
             _config = LoadConfig(keyConfigName, yamlConfig);
             _stubble = new StubbleBuilder().Build();
         }
 
-        public YamlHttpClientFactory(string keyConfigName, string yamlConfig, TimeSpan defaultClientTimeout) : base(defaultClientTimeout)
+        public YamlHttpClient(string keyConfigName, string yamlConfig, TimeSpan defaultClientTimeout) : base(defaultClientTimeout)
         {
             _uniqueId = keyConfigName + yamlConfig;
             _config = LoadConfig(keyConfigName, yamlConfig);

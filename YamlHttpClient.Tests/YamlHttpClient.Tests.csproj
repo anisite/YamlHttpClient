@@ -16,7 +16,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\YamlHttpClient.net\YamlHttpClient.csproj" />
+    <ProjectReference Include="..\YamlHttpClient\YamlHttpClient.csproj" />
   </ItemGroup>
 
 </Project>
