@@ -8,6 +8,8 @@ using System.Net.Http;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
+using YamlDotNet.Serialization;
+using YamlDotNet.Serialization.NamingConventions;
 using YamlHttpClient.Factory;
 using YamlHttpClient.Interfaces;
 using YamlHttpClient.Settings;
@@ -24,27 +26,48 @@ namespace YamlHttpClient
         private readonly string _uniqueId;
         private readonly IStubbleRenderer _stubble;
 
+        public YamlHttpClientFactory(string keyConfigName, byte[] yamlConfig)
+        {
+            _uniqueId = keyConfigName + yamlConfig;
+            _config = ReadFromBytes(keyConfigName, yamlConfig);
+            _stubble = new StubbleBuilder().Build();
+        }
+
         public YamlHttpClientFactory(string keyConfigName, string yamlConfig)
         {
             _uniqueId = keyConfigName + yamlConfig;
-            _config = LoadConfig(keyConfigName, yamlConfig);
+            _config = ReadFromFile(keyConfigName, yamlConfig);
             _stubble = new StubbleBuilder().Build();
         }
 
         public YamlHttpClientFactory(string keyConfigName, string yamlConfig, TimeSpan defaultClientTimeout) : base(defaultClientTimeout)
         {
             _uniqueId = keyConfigName + yamlConfig;
-            _config = LoadConfig(keyConfigName, yamlConfig);
+            _config = ReadFromFile(keyConfigName, yamlConfig);
             _stubble = new StubbleBuilder().Build();
         }
 
-        private HttpClientSettings LoadConfig(string keyConfigName, string yamlConfig)
+        private HttpClientSettings ReadFromBytes(string keyConfigName, byte[] yamlFile)
         {
             YamlHttpClientConfig config;
-            using (var configFile = new StreamReader(yamlConfig))
+
+            var builder = new YamlDotNet.Serialization.DeserializerBuilder()
+                .WithNamingConvention(YamlDotNet.Serialization.NamingConventions.NullNamingConvention.Instance)
+                .Build();
+
+            config = builder
+                .Deserialize<YamlHttpClientConfig>(Encoding.Default.GetString(yamlFile));
+
+            return config.HttpClient[keyConfigName];
+        }
+
+        private HttpClientSettings ReadFromFile(string keyConfigName, string filePath)
+        {
+            YamlHttpClientConfig config;
+            using (var configFile = new StreamReader(filePath))
             {
-                var builder = new YamlDotNet.Serialization.DeserializerBuilder()
-                    .WithNamingConvention(YamlDotNet.Serialization.NamingConventions.NullNamingConvention.Instance)
+                var builder = new DeserializerBuilder()
+                    .WithNamingConvention(NullNamingConvention.Instance)
                     .Build();
 
                 config = builder
