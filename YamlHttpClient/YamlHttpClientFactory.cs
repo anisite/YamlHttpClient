@@ -18,20 +18,20 @@ namespace YamlHttpClient
     /// <summary>
     /// Yaml config based HttpClient
     /// </summary>
-    public class YamlHttpClient : YamlHttpClientFactoryBase
+    public class YamlHttpClientFactory : YamlHttpClientFactoryBase
     {
         private readonly HttpClientSettings _config;
         private readonly string _uniqueId;
         private readonly IStubbleRenderer _stubble;
 
-        public YamlHttpClient(string keyConfigName, string yamlConfig)
+        public YamlHttpClientFactory(string keyConfigName, string yamlConfig)
         {
             _uniqueId = keyConfigName + yamlConfig;
             _config = LoadConfig(keyConfigName, yamlConfig);
             _stubble = new StubbleBuilder().Build();
         }
 
-        public YamlHttpClient(string keyConfigName, string yamlConfig, TimeSpan defaultClientTimeout) : base(defaultClientTimeout)
+        public YamlHttpClientFactory(string keyConfigName, string yamlConfig, TimeSpan defaultClientTimeout) : base(defaultClientTimeout)
         {
             _uniqueId = keyConfigName + yamlConfig;
             _config = LoadConfig(keyConfigName, yamlConfig);

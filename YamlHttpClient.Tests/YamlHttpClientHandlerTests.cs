@@ -17,7 +17,7 @@ namespace YamlHttpClient.Tests
         {
             var yamlFile = @"../../../test1.yml";
             
-            YamlHttpClient httpClient = new YamlHttpClient("myHttpCall", yamlFile);
+            YamlHttpClientFactory httpClient = new YamlHttpClientFactory("myHttpCall", yamlFile);
 
             var testObject = new
             {
