@@ -1,2 +1,2 @@
-# YamlHttpClient.net
+# YamlHttpClient
 Yaml config based .net HttpClient
