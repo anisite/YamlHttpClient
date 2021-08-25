@@ -91,7 +91,7 @@ namespace YamlHttpClient
         {
             var client = GetHttpClient();
             var msg = new HttpRequestMessage(new HttpMethod(_config.Method),
-                                                            _config.Url);
+                                                            SS(_config.Url, data));
 
             // String Content
             if (!string.IsNullOrWhiteSpace(_config.StringContent))
