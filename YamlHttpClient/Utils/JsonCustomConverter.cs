@@ -3,9 +3,6 @@ using System.Collections.Generic;
 using System.Text;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
-using Stubble.Core;
-using Stubble.Core.Builders;
-using Stubble.Helpers;
 using System.Collections;
 using System.Globalization;
 using System.Linq;
@@ -47,10 +44,10 @@ namespace YamlHttpClient.Utils
                 return serializer.Deserialize<object[]?>(reader);
             }
 
-            if (reader.TokenType == JsonToken.String)
+           /* if (reader.TokenType == JsonToken.String)
             {
-                return _stubble.Render((string)reader.Value, _inboundData);
-            }
+                var data = _stubble.Render((string)reader.Value, _inboundData);
+            }*/
 
             return serializer.Deserialize(reader);
         }

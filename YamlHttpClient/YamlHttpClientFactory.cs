@@ -1,6 +1,6 @@
-﻿using Newtonsoft.Json;
-using Stubble.Core.Builders;
-using Stubble.Core.Interfaces;
+﻿using HandlebarsDotNet;
+using HandlebarsDotNet.IO;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -25,27 +25,36 @@ namespace YamlHttpClient
     {
         private readonly HttpClientSettings _config;
         private readonly string _uniqueId;
-        private readonly IStubbleRenderer _stubble;
+        private readonly IHandlebars _handlebars;
 
         public YamlHttpClientFactory(string keyConfigName, byte[] yamlConfig)
         {
             _uniqueId = keyConfigName + yamlConfig;
             _config = ReadFromBytes(keyConfigName, yamlConfig);
-            _stubble = new StubbleBuilder().Build();
+            _handlebars = CreateHandleBars();
         }
 
         public YamlHttpClientFactory(string keyConfigName, string yamlConfig)
         {
             _uniqueId = keyConfigName + yamlConfig;
             _config = ReadFromFile(keyConfigName, yamlConfig);
-            _stubble = new StubbleBuilder().Build();
+            _handlebars = CreateHandleBars();
         }
 
         public YamlHttpClientFactory(string keyConfigName, string yamlConfig, TimeSpan defaultClientTimeout) : base(defaultClientTimeout)
         {
             _uniqueId = keyConfigName + yamlConfig;
             _config = ReadFromFile(keyConfigName, yamlConfig);
-            _stubble = new StubbleBuilder().Build();
+            _handlebars = CreateHandleBars();
+        }
+
+        private IHandlebars CreateHandleBars()
+        {
+            IHandlebars hb;
+            var formatter = new CustomJsonFormatter();
+            hb = Handlebars.Create();
+            hb.Configuration.FormatterProviders.Add(formatter);
+            return hb;
         }
 
         private HttpClientSettings ReadFromBytes(string keyConfigName, byte[] yamlFile)
@@ -102,12 +111,19 @@ namespace YamlHttpClient
             // Json Content
             else if (!(_config.JsonContent is null))
             {
-                var objet = JsonConvert.DeserializeObject<IDictionary<object, object>>(
-                                 _config.JsonContent.ToString() ?? string.Empty,
+                //var tt = SS(_config.JsonContent.ToString() ?? string.Empty, data);
+
+                var template = _handlebars.Compile(_config.JsonContent.ToString() ?? string.Empty);
+
+                var result = template(data);
+
+                /*var objet = JsonConvert.DeserializeObject<IDictionary<object, object>>(
+                                 SS(_config.JsonContent.ToString() ?? string.Empty, data),
                                      new JsonConverter[] {
-                                         new JsonCustomConverter(_stubble, data) });
-                var json = JsonConvert.SerializeObject(objet);
-                msg.Content = new StringContent(json, Encoding.GetEncoding(_config.Encoding ?? "UTF-8"), "application/json");
+                                         new JsonCustomConverter(_stubble, data) });*/
+
+                //var json = JsonConvert.SerializeObject(objet);
+                msg.Content = new StringContent(result, Encoding.GetEncoding(_config.Encoding ?? "UTF-8"), "application/json");
             }
             else
             {
@@ -151,7 +167,8 @@ namespace YamlHttpClient
         /// <returns></returns>
         private string SS(string value, object data)
         {
-            return _stubble.Render(value, data);
+            var comp = _handlebars.Compile(value);
+            return comp(data);
         }
     }
 }

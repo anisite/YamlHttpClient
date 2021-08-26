@@ -22,6 +22,7 @@ namespace YamlHttpClient.Tests
             var testObject = new
             {
                 val1 = "Je suis FRW",
+                place = "yty",
                 System = new { CodeNT = @"mes\cotda05" }
             };
 

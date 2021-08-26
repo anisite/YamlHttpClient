@@ -1,13 +1,17 @@
 ﻿http_client:
   myHttpCall:
       method: POST
-      url: https://ptsv2.com/t/yty/post
+      url: https://ptsv2.com/t/{{place}}/post
       use_default_credentials: true
       headers:
           CodeNT: '{{System.CodeNT}}'
           Accept: 'application/json'
       #string_content: string
-      json_content: '{"val1": "{{val1}}", "all": "{{{.}}}"}'
+      json_content: |
+        {
+            "val1": "{{val1}}", 
+            "all": {{{System}}}
+         }
       #form_content:
       #      key: val
 

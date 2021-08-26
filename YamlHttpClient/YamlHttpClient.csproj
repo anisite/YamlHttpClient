@@ -10,17 +10,20 @@
 		<PackageProjectUrl>https://github.com/anisite/YamlHttpClient</PackageProjectUrl>
 		<RepositoryUrl>https://github.com/anisite/YamlHttpClient</RepositoryUrl>
 		<PackageLicenseFile>LICENSE</PackageLicenseFile>
-		<Version>1.0.0-alpha5</Version>
+		<Version>1.0.0-alpha6</Version>
 		<Description>Yaml config based .net HttpClient</Description>
 	</PropertyGroup>
 
 	<ItemGroup>
+	  <Compile Remove="Utils\JsonCustomConverter.cs" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Handlebars.Net" Version="2.0.9" />
 		<PackageReference Include="Microsoft.AspNetCore.Http.Abstractions" Version="2.2.0" />
 		<PackageReference Include="Microsoft.Extensions.Http" Version="3.1.17" />
 		<PackageReference Include="Microsoft.Extensions.Options" Version="3.1.17" />
 		<PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
-		<PackageReference Include="Stubble.Core" Version="1.9.3" />
-		<PackageReference Include="Stubble.Helpers" Version="1.1.3" />
 		<PackageReference Include="System.Collections" Version="4.3.0" />
 		<PackageReference Include="YamlDotNet" Version="11.2.1" />
 	</ItemGroup>
