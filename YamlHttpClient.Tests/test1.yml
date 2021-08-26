@@ -10,7 +10,7 @@
       json_content: |
         {
             "val1": "{{val1}}", 
-            "all": {{{System}}}
+            "all": {{{Json .}}}
          }
       #form_content:
       #      key: val

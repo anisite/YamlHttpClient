@@ -51,9 +51,10 @@ namespace YamlHttpClient
         private IHandlebars CreateHandleBars()
         {
             IHandlebars hb;
-            var formatter = new CustomJsonFormatter();
             hb = Handlebars.Create();
-            hb.Configuration.FormatterProviders.Add(formatter);
+
+            hb.AddJsonHelper();
+
             return hb;
         }
 
