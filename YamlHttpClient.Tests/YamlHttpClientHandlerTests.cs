@@ -26,9 +26,17 @@ namespace YamlHttpClient.Tests
                 System = new { CodeNT = @"mes\cotda05" }
             };
 
-            var response = await httpClient.AutoCall(testObject);
+            // Build message
+            var request = httpClient.BuildRequestMessage(testObject);
+
+            // Inspect content if needed
+            var readContent = await request.Content.ReadAsStringAsync();
+
+            // Send it
+            var response = await httpClient.SendAsync(request);
 
             //Do something with response
+            
         }
     }
 }

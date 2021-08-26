@@ -87,6 +87,8 @@ namespace YamlHttpClient
             return config.HttpClient[keyConfigName];
         }
 
+        public HttpClientSettings HttpClientSettings => _config;
+
         protected override string GetCacheKey()
         {
             return _uniqueId;
@@ -97,9 +99,8 @@ namespace YamlHttpClient
             return new YamlSafeHttpClient(this, url);
         }
 
-        public Task<HttpResponseMessage> AutoCall(dynamic data)
+        public HttpRequestMessage BuildRequestMessage(dynamic data)
         {
-            var client = GetHttpClient();
             var msg = new HttpRequestMessage(new HttpMethod(_config.Method),
                                                             SS(_config.Url, data));
 
@@ -136,7 +137,19 @@ namespace YamlHttpClient
                 msg.Headers.TryAddWithoutValidation(item.Key, SS(item.Value, data));
             }
 
-            return client.SendAsync(msg);
+            return msg;
+        }
+
+        public Task<HttpResponseMessage> SendAsync(HttpRequestMessage httpRequestMessage)
+        {
+            var client = GetHttpClient();
+            return client.SendAsync(httpRequestMessage);
+        }
+
+        public Task<HttpResponseMessage> AutoCallAsync(dynamic data)
+        {
+            var msg = BuildRequestMessage(data);
+            return SendAsync(msg);
         }
 
         protected override HttpMessageHandler CreateMessageHandler(string? proxyUrl = null)
