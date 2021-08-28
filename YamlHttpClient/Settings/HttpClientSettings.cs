@@ -30,5 +30,8 @@ namespace YamlHttpClient.Settings
 
         [YamlMember(Alias = "headers")]
         public Dictionary<string, string> Headers { get; set; }
+
+        [YamlMember(Alias = "check_response")]
+        public CheckResponse? CheckResponse { get; set; }
     }
 }

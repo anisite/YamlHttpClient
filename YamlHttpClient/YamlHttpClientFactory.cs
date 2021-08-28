@@ -4,6 +4,7 @@ using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Security.Cryptography;
@@ -11,6 +12,7 @@ using System.Text;
 using System.Threading.Tasks;
 using YamlDotNet.Serialization;
 using YamlDotNet.Serialization.NamingConventions;
+using YamlHttpClient.Exceptions;
 using YamlHttpClient.Factory;
 using YamlHttpClient.Interfaces;
 using YamlHttpClient.Settings;
@@ -151,6 +153,32 @@ namespace YamlHttpClient
         {
             var msg = BuildRequestMessage(data);
             return SendAsync(msg);
+        }
+
+        public async Task CheckResponseAsync(HttpResponseMessage response)
+        {
+            if (_config.CheckResponse?.ThrowExceptionIfBodyContainsAny?.Any() ?? false)
+            {
+                foreach (var item in _config.CheckResponse.ThrowExceptionIfBodyContainsAny)
+                {
+                    if ((await response.Content.ReadAsStringAsync()).Contains(item))
+                    { 
+                        throw new ThrowExceptionIfBodyContainsAny(item);
+                    }
+                }
+            }
+
+            if (_config.CheckResponse?.ThrowExceptionIfBodyNotContainAll?.Any() ?? false)
+            {
+                foreach (var item in _config.CheckResponse.ThrowExceptionIfBodyNotContainAll)
+                {
+                    if (!(await response.Content.ReadAsStringAsync()).Contains(item))
+                    {
+                        throw new ThrowExceptionIfBodyNotContainAll(item);
+                    }
+                }
+            }
+
         }
 
         protected override HttpMessageHandler CreateMessageHandler(string? proxyUrl = null)

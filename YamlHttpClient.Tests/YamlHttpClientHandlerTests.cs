@@ -36,7 +36,9 @@ namespace YamlHttpClient.Tests
             var response = await httpClient.SendAsync(request);
 
             //Do something with response
-            
+            await httpClient.CheckResponseAsync(response);
+
+            var data = await response.Content.ReadAsStringAsync();
         }
     }
 }

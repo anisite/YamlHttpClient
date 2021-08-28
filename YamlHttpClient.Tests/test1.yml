@@ -12,6 +12,11 @@
             "val1": "{{val1}}", 
             "all": {{{Json .}}}
          }
+      check_response:
+        throw_exception_if_body_contains_any:
+            - error
+        throw_exception_if_body_not_contains_all:
+            - dump
       #form_content:
       #      key: val
 
