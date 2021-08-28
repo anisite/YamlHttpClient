@@ -8,29 +8,50 @@ using YamlHttpClient.Interfaces;
 
 namespace YamlHttpClient.Factory
 {
+    /// <summary>
+    /// Base class of factory
+    /// </summary>
     public abstract class YamlHttpClientFactoryBase : IYamlHttpClientFactory
     {
         private readonly ConcurrentDictionary<string, IYamlHttpClient> _clients = new ConcurrentDictionary<string, IYamlHttpClient>();
         private readonly TimeSpan _defaultClientTimeout = TimeSpan.FromSeconds(100);// same as HttpClient default value
 
+        /// <summary>
+        /// Ctor of base class
+        /// </summary>
         protected YamlHttpClientFactoryBase()
         {
         }
+
+        /// <summary>
+        /// Ctor of base class
+        /// </summary>
+        /// <param name="defaultClientTimeout">Delay before timeout</param>
         protected YamlHttpClientFactoryBase(TimeSpan defaultClientTimeout)
         {
             _defaultClientTimeout = defaultClientTimeout;
         }
 
-        public virtual HttpClient GetHttpClient(string url = null)
+        /// <summary>
+        /// Get http client from cache or instanciate another.
+        /// </summary>
+        /// <param name="url"></param>
+        /// <returns></returns>
+        public virtual HttpClient GetHttpClient(string? url = null)
         {
-           var safeClient = _clients.AddOrUpdate(
-                GetCacheKey(),
-                Create(url),
-                (u, client) => client.IsDisposed ? Create(url) : client);
+            var safeClient = _clients.AddOrUpdate(
+                 GetCacheKey(),
+                 Create(url),
+                 (u, client) => client.IsDisposed ? Create(url) : client);
 
             return safeClient.HttpClient;
         }
 
+        /// <summary>
+        /// Get http client from cache or instanciate another.
+        /// </summary>
+        /// <param name="proxyUrl">Specify proxy url to use.</param>
+        /// <returns></returns>
         public virtual HttpClient GetProxiedHttpClient(string proxyUrl)
         {
             if (string.IsNullOrEmpty(proxyUrl))
@@ -44,6 +65,7 @@ namespace YamlHttpClient.Factory
             return safeClient.HttpClient;
         }
 
+        /// <summary />
         public void Dispose()
         {
             foreach (var kv in _clients)
@@ -54,23 +76,25 @@ namespace YamlHttpClient.Factory
             _clients.Clear();
         }
 
-
+        /// <summary />
         protected abstract string GetCacheKey();
-
-        protected virtual IYamlHttpClient Create(string url) => new YamlSafeHttpClient(this,url);
+        /// <summary />
+        protected virtual IYamlHttpClient Create(string? url) => new YamlSafeHttpClient(this, url);
+        /// <summary />
         protected virtual IYamlHttpClient CreateProxied(string proxyUrl) => new YamlSafeHttpClient(this, proxyUrl, true);
 
 
-        internal  HttpClient CreateHttpClientInternal(HttpMessageHandler handler)
+        internal HttpClient CreateHttpClientInternal(HttpMessageHandler handler)
         {
             return CreateHttpClient(handler);
         }
 
-        internal HttpMessageHandler CreateMessageHandlerInternal(string proxyUrl = null)
+        internal HttpMessageHandler CreateMessageHandlerInternal(string? proxyUrl = null)
         {
             return CreateMessageHandler(proxyUrl);
         }
 
+        /// <summary />
         protected virtual HttpClient CreateHttpClient(HttpMessageHandler handler)
         {
             return new HttpClient(handler)
@@ -79,6 +103,7 @@ namespace YamlHttpClient.Factory
             };
         }
 
+        /// <summary />
         protected virtual HttpMessageHandler CreateMessageHandler(string? proxyUrl = null)
         {
             if (!string.IsNullOrEmpty(proxyUrl))

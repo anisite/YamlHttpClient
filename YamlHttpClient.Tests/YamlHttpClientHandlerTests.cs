@@ -6,6 +6,8 @@ using System.Net.Http;
 using System.Threading.Tasks;
 using Arnath.StandaloneHttpClientFactory;
 using YamlHttpClient;
+using YamlHttpClient.Utils;
+using YamlHttpClient.Settings;
 
 namespace YamlHttpClient.Tests
 {
@@ -16,12 +18,16 @@ namespace YamlHttpClient.Tests
         public async Task YamlHttpClientHandlerTest()
         {
             var yamlFile = @"../../../test1.yml";
-            
-            YamlHttpClientFactory httpClient = new YamlHttpClientFactory("myHttpCall", yamlFile);
+
+            var str = System.IO.File.ReadAllText(yamlFile);
+
+            YamlHttpClientFactory httpClient = new YamlHttpClientFactory(new YamlHttpClientConfigBuilder().LoadFromString(str, "myHttpCall"));
 
             var testObject = new
             {
-                val1 = "Je suis FRW",
+                table = new[] { "v1", "v2" },
+                obj = new[] { new { test = 1 }, new { test = 2 } },
+                val1 = new Dictionary<string, object>() { { "testkey", "testval" } },
                 place = "yty",
                 System = new { CodeNT = @"mes\cotda05" }
             };

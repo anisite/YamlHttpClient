@@ -16,14 +16,14 @@ namespace YamlHttpClient.Factory
 
 
         private DateTime? _clientCreatedAt;
-        private HttpClient _zombieClient;
+        private HttpClient _zombieClient = default!;
 
         private readonly object _connectionLeaseLock = new object();
 
         public HttpClient HttpClient => GetHttpClient();
 
-        public HttpMessageHandler HttpMessageHandler => HttpRunTimeSettings.Current?.HttpMessageHandler ?? _httpMessageHandler?.Value;
-        public string BaseUrl { get; set; }
+        public HttpMessageHandler HttpMessageHandler => HttpRunTimeSettings.Current?.HttpMessageHandler ?? _httpMessageHandler?.Value!;
+        public string? BaseUrl { get; set; }
         public bool IsProxy { get; set; }
 
         public YamlSafeHttpClient(YamlHttpClientFactoryBase baseFactory, string? baseUrl = null, bool isProxy = false)

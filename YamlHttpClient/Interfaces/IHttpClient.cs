@@ -3,13 +3,16 @@ using System.Net.Http;
 
 namespace YamlHttpClient.Interfaces
 {
+    /// <summary />
     public interface IYamlHttpClient : IDisposable
     {
+        /// <summary />
         HttpClient HttpClient { get; }
-
+        /// <summary />
         HttpMessageHandler HttpMessageHandler { get; }
-
-        string BaseUrl { get; set; }
+        /// <summary />
+        string? BaseUrl { get; set; }
+        /// <summary />
         bool IsDisposed { get; }
     }
 }

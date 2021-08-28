@@ -10,7 +10,8 @@
       json_content: |
         {
             "val1": "{{val1}}", 
-            "all": {{{Json .}}}
+            "all": {{{Json . ">flatten;_;_{0}"}}}
+            "all2": {{{Json .}}}
          }
       check_response:
         throw_exception_if_body_contains_any:

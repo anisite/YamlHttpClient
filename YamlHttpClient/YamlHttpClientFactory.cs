@@ -7,6 +7,7 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
+using System.Numerics;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
@@ -29,24 +30,25 @@ namespace YamlHttpClient
         private readonly string _uniqueId;
         private readonly IHandlebars _handlebars;
 
-        public YamlHttpClientFactory(string keyConfigName, byte[] yamlConfig)
+        /// <summary>
+        /// 
+        /// </summary>
+        public YamlHttpClientFactory(HttpClientSettings httpClientSettings)
         {
-            _uniqueId = keyConfigName + yamlConfig;
-            _config = ReadFromBytes(keyConfigName, yamlConfig);
+            _uniqueId = httpClientSettings.Url;
+            _config = httpClientSettings;
             _handlebars = CreateHandleBars();
         }
 
-        public YamlHttpClientFactory(string keyConfigName, string yamlConfig)
+        /// <summary>
+        /// Create a new instance of YamlHttpClientFactory
+        /// </summary>
+        /// <param name="httpClientSettings"></param>
+        /// <param name="defaultClientTimeout"></param>
+        public YamlHttpClientFactory(HttpClientSettings httpClientSettings, TimeSpan defaultClientTimeout) : base(defaultClientTimeout)
         {
-            _uniqueId = keyConfigName + yamlConfig;
-            _config = ReadFromFile(keyConfigName, yamlConfig);
-            _handlebars = CreateHandleBars();
-        }
-
-        public YamlHttpClientFactory(string keyConfigName, string yamlConfig, TimeSpan defaultClientTimeout) : base(defaultClientTimeout)
-        {
-            _uniqueId = keyConfigName + yamlConfig;
-            _config = ReadFromFile(keyConfigName, yamlConfig);
+            _uniqueId = httpClientSettings.Url;
+            _config = httpClientSettings;
             _handlebars = CreateHandleBars();
         }
 
@@ -60,48 +62,35 @@ namespace YamlHttpClient
             return hb;
         }
 
-        private HttpClientSettings ReadFromBytes(string keyConfigName, byte[] yamlFile)
-        {
-            YamlHttpClientConfig config;
-
-            var builder = new DeserializerBuilder()
-                .WithNamingConvention(NullNamingConvention.Instance)
-                .Build();
-
-            config = builder
-                .Deserialize<YamlHttpClientConfig>(Encoding.Default.GetString(yamlFile));
-
-            return config.HttpClient[keyConfigName];
-        }
-
-        private HttpClientSettings ReadFromFile(string keyConfigName, string filePath)
-        {
-            YamlHttpClientConfig config;
-            using (var configFile = new StreamReader(filePath))
-            {
-                var builder = new DeserializerBuilder()
-                    .WithNamingConvention(NullNamingConvention.Instance)
-                    .Build();
-
-                config = builder
-                    .Deserialize<YamlHttpClientConfig>(configFile);
-            }
-
-            return config.HttpClient[keyConfigName];
-        }
-
+        /// <summary>
+        /// Config
+        /// </summary>
         public HttpClientSettings HttpClientSettings => _config;
 
+        /// <summary>
+        /// Cache key
+        /// </summary>
+        /// <returns></returns>
         protected override string GetCacheKey()
         {
             return _uniqueId;
         }
 
-        protected override IYamlHttpClient Create(string url)
+        /// <summary>
+        /// Create
+        /// </summary>
+        /// <param name="url"></param>
+        /// <returns></returns>
+        protected override IYamlHttpClient Create(string? url)
         {
             return new YamlSafeHttpClient(this, url);
         }
 
+        /// <summary>
+        /// Build request message
+        /// </summary>
+        /// <param name="data"></param>
+        /// <returns></returns>
         public HttpRequestMessage BuildRequestMessage(dynamic data)
         {
             var msg = new HttpRequestMessage(new HttpMethod(_config.Method),
@@ -143,18 +132,33 @@ namespace YamlHttpClient
             return msg;
         }
 
+        /// <summary>
+        /// Send http request to server with parameters from config
+        /// </summary>
+        /// <param name="httpRequestMessage"></param>
+        /// <returns></returns>
         public Task<HttpResponseMessage> SendAsync(HttpRequestMessage httpRequestMessage)
         {
             var client = GetHttpClient();
             return client.SendAsync(httpRequestMessage);
         }
 
+        /// <summary>
+        /// Auto call a web url with settings from config and any data to work with.
+        /// </summary>
+        /// <param name="data"></param>
+        /// <returns></returns>
         public Task<HttpResponseMessage> AutoCallAsync(dynamic data)
         {
             var msg = BuildRequestMessage(data);
             return SendAsync(msg);
         }
 
+        /// <summary>
+        /// Check response from check_response settings in yaml config
+        /// </summary>
+        /// <param name="response"></param>
+        /// <returns></returns>
         public async Task CheckResponseAsync(HttpResponseMessage response)
         {
             if (_config.CheckResponse?.ThrowExceptionIfBodyContainsAny?.Any() ?? false)
@@ -181,6 +185,11 @@ namespace YamlHttpClient
 
         }
 
+        /// <summary>
+        /// Message handler
+        /// </summary>
+        /// <param name="proxyUrl"></param>
+        /// <returns></returns>
         protected override HttpMessageHandler CreateMessageHandler(string? proxyUrl = null)
         {
             var handler = new HttpClientHandler();

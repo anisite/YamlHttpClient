@@ -3,9 +3,13 @@ using YamlDotNet.Serialization;
 
 namespace YamlHttpClient.Settings
 {
-    internal class YamlHttpClientConfig
+    /// <summary>
+    /// Config builder
+    /// </summary>
+    public class YamlHttpClientConfigBuilder
     {
+        /// <summary />
         [YamlMember(Alias = "http_client")]
-        public Dictionary<string, HttpClientSettings> HttpClient { get; set; }
+        public Dictionary<string, HttpClientSettings> HttpClient { get; set; } = default!;
     }
 }
