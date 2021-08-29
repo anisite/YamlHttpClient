@@ -10,7 +10,7 @@
       json_content: |
         {
             "val1": "{{val1}}", 
-            "all": {{{Json . ">flatten;_;_{0}"}}}
+            "all": {{{Json . ">flatten;_;_{0}" ">forcestring"}}}
             "all2": {{{Json .}}}
          }
       check_response:

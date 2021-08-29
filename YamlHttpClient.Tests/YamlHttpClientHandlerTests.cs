@@ -26,6 +26,8 @@ namespace YamlHttpClient.Tests
             var testObject = new
             {
                 table = new[] { "v1", "v2" },
+                date = new DateTime(2000, 1, 1),
+                date2 = new DateTime(2000, 1, 1, 2, 2, 2),
                 obj = new[] { new { test = 1 }, new { test = 2 } },
                 val1 = new Dictionary<string, object>() { { "testkey", "testval" } },
                 place = "yty",

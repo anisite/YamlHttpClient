@@ -17,6 +17,7 @@ namespace YamlHttpClient.Utils
 
                 var isFirst = true;
                 var flatten = false;
+                var forceString = false;
                 var flatten_separator = ".";
                 var flatten_index_surrounder = "[{0}]";
 
@@ -43,6 +44,9 @@ namespace YamlHttpClient.Utils
                                     flatten_index_surrounder = flattenOptions[2];
                                 }
                             }
+                        }else if(item.ToString()!.StartsWith(">forceString", System.StringComparison.InvariantCultureIgnoreCase))
+                        {
+                            forceString = true;
                         }
                     }
                 }
@@ -50,7 +54,7 @@ namespace YamlHttpClient.Utils
 
                 if (flatten)
                 {
-                    var oo = JsonHelper.DeserializeAndFlatten(json, flatten_separator, flatten_index_surrounder);
+                    var oo = JsonHelper.DeserializeAndFlatten(json, forceString, flatten_separator, flatten_index_surrounder);
                     json = JsonConvert.SerializeObject(oo);
                 }
 
