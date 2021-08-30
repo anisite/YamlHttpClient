@@ -20,7 +20,7 @@ var file = @"myYamlConfig.yml";
 
 // Core builder, load settings from Yaml source
 YamlHttpClientFactory httpClient = new YamlHttpClientFactory(new YamlHttpClientConfigBuilder()
-								      .LoadFromFile(file, "myHttpCall"));
+								 .LoadFromFile(file, "myHttpCall"));
 
 // Build Http message
 var request = httpClient.BuildRequestMessage(anyInputObject);
