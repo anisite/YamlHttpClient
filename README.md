@@ -1,6 +1,9 @@
 # YamlHttpClient
 Yaml config based .net HttpClient
 
+Download from NuGet
+https://www.nuget.org/packages/YamlHttpClient/
+
 ## How to use
 
 ```csharp
