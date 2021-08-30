@@ -22,7 +22,8 @@ var file = @"myYamlConfig.yml";
 YamlHttpClientFactory httpClient = new YamlHttpClientFactory(new YamlHttpClientConfigBuilder()
 								 .LoadFromFile(file, "myHttpCall"));
 
-// Build Http message
+// Here the magic - Build Http message - Dynamically
+// from config with your object as data source, see yaml config bellow
 var request = httpClient.BuildRequestMessage(anyInputObject);
 
 // Inspect content if needed
