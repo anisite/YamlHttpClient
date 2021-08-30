@@ -1,6 +1,8 @@
 # YamlHttpClient
 Yaml config based .net HttpClient
 
+## How to use
+
 ```csharp
 // Sample object
 var anyInputObject = new
@@ -35,4 +37,28 @@ var returnData = await response.Content.ReadAsStringAsync();
 // Check some stuff from config
 await httpClient.CheckResponseAsync(response);
 
+```
+
+## Example Yaml config
+```yaml
+http_client:
+  myHttpCall:
+      method: POST
+      url: https://ptsv2.com/t/{{place}}/post
+      use_default_credentials: true
+      headers:
+          CodeNT: '{{System.CodeNT}}'
+          Accept: 'application/json'
+      #string_content: string
+      json_content: |
+        {
+            "someVal": "{{val1}}", 
+            "flattenObj": {{{Json . ">flatten;_;_{0}" ">forcestring"}}}
+            "obj": {{{Json .}}}
+         }
+      check_response:
+        throw_exception_if_body_contains_any:
+            - error
+        throw_exception_if_body_not_contains_all:
+            - dump
 ```
