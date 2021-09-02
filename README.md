@@ -43,7 +43,7 @@ await httpClient.CheckResponseAsync(response);
 
 ```
 
-## Example Yaml config
+## Yaml config sample
 ```yaml
 http_client:
   myHttpCall:
