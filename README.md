@@ -56,7 +56,7 @@ http_client:
       headers:
           CodeNT: '{{System.CodeNT}}'
           Accept: 'application/json'
-      # Example Json content to send, with token value replacement by Handlebars.net
+      # Example Json content to send, with token template value replacement by Handlebars.net
       json_content: |
         {
             "someVal": "{{val1}}", 
@@ -69,4 +69,8 @@ http_client:
             - error
         throw_exception_if_body_not_contains_all:
             - dump
+```
+
+```Handlebars
+    "someVal": "{{val1}}", 
 ```
