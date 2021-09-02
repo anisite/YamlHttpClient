@@ -46,20 +46,24 @@ await httpClient.CheckResponseAsync(response);
 ## Yaml config sample
 ```yaml
 http_client:
+  # Named config key
   myHttpCall:
       method: POST
       url: https://ptsv2.com/t/{{place}}/post
+      # Ntlm auto negociation
       use_default_credentials: true
+      # Any specific required headers
       headers:
           CodeNT: '{{System.CodeNT}}'
           Accept: 'application/json'
-      #string_content: string
+      # Example Json content to send, with token value replacement by Handlebars.net
       json_content: |
         {
             "someVal": "{{val1}}", 
             "flattenObj": {{{Json . ">flatten;_;_{0}" ">forcestring"}}}
             "obj": {{{Json .}}}
          }
+      # Quality assurance if supported by implementation to self check response raw body
       check_response:
         throw_exception_if_body_contains_any:
             - error
