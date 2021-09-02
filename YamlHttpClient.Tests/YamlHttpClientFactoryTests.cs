@@ -12,7 +12,7 @@ using YamlHttpClient.Settings;
 namespace YamlHttpClient.Tests
 {
     [TestClass()]
-    public class YamlHttpClientHandlerTests
+    public class YamlHttpClientFactoryTests
     {
         [TestMethod()]
         public async Task YamlHttpClientHandlerTest()
