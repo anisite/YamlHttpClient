@@ -1,5 +1,8 @@
 ﻿using HandlebarsDotNet;
 using Newtonsoft.Json;
+using System;
+using System.Drawing;
+using System.IO;
 
 namespace YamlHttpClient.Utils
 {
@@ -44,7 +47,8 @@ namespace YamlHttpClient.Utils
                                     flatten_index_surrounder = flattenOptions[2];
                                 }
                             }
-                        }else if(item.ToString()!.StartsWith(">forceString", System.StringComparison.InvariantCultureIgnoreCase))
+                        }
+                        else if (item.ToString()!.StartsWith(">forceString", System.StringComparison.InvariantCultureIgnoreCase))
                         {
                             forceString = true;
                         }
@@ -59,6 +63,36 @@ namespace YamlHttpClient.Utils
                 }
 
                 output.Write(json);
+            });
+        }
+
+        public static void AddBase64(this IHandlebars hb)
+        {
+            hb.RegisterHelper("Base64", (output, context, arguments) =>
+            {
+                if (arguments[0] is Image img)
+                {
+                    string b64;
+                    using (MemoryStream _mStream = new MemoryStream())
+                    {
+                        img.Save(_mStream, img.RawFormat);
+                        _mStream.Position = 0;
+                        byte[] _imageBytes = _mStream.ToArray();
+                        b64 = Convert.ToBase64String(_imageBytes);
+                    }
+
+                    output.Write(b64);
+
+                }
+                else if (!arguments[0].GetType().IsPrimitive)
+                {
+
+                    var plainTextBytes = System.Text.Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(arguments[0]));
+                    var b64 = System.Convert.ToBase64String(plainTextBytes);
+                    output.Write(b64);
+
+                }
+                //var b64 = Convert.FromBase64String(arguments[0]?.ToString() ?? string.Empty);
             });
         }
     }

@@ -8,6 +8,7 @@ using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Numerics;
+using System.Runtime.CompilerServices;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
@@ -29,6 +30,7 @@ namespace YamlHttpClient
         private readonly HttpClientSettings _config;
         private readonly string _uniqueId;
         private readonly IHandlebars _handlebars;
+        private readonly IContentHandler _contentHandler;
 
         /// <summary>
         /// 
@@ -38,6 +40,7 @@ namespace YamlHttpClient
             _uniqueId = httpClientSettings.Url;
             _config = httpClientSettings;
             _handlebars = CreateHandleBars();
+            _contentHandler = new ContentHandler(_handlebars);
         }
 
         /// <summary>
@@ -45,19 +48,24 @@ namespace YamlHttpClient
         /// </summary>
         /// <param name="httpClientSettings"></param>
         /// <param name="defaultClientTimeout"></param>
-        public YamlHttpClientFactory(HttpClientSettings httpClientSettings, TimeSpan defaultClientTimeout) : base(defaultClientTimeout)
+        public YamlHttpClientFactory(HttpClientSettings httpClientSettings,
+                                     TimeSpan defaultClientTimeout) : base(defaultClientTimeout)
         {
             _uniqueId = httpClientSettings.Url;
             _config = httpClientSettings;
             _handlebars = CreateHandleBars();
+            _contentHandler = new ContentHandler(_handlebars);
         }
 
-        private IHandlebars CreateHandleBars()
+        /// <summary>
+        /// </summary>
+        public static IHandlebars CreateHandleBars()
         {
             IHandlebars hb;
             hb = Handlebars.Create();
 
             hb.AddJsonHelper();
+            hb.AddBase64();
 
             return hb;
         }
@@ -96,38 +104,21 @@ namespace YamlHttpClient
             var msg = new HttpRequestMessage(new HttpMethod(_config.Method),
                                                             SS(_config.Url, data));
 
-            // String Content
-            if (!string.IsNullOrWhiteSpace(_config.StringContent))
+            msg.Content = _contentHandler.Content(data, _config.Content);
+
+            // Check If Basic authentication 
+            if (_config.AuthBasic is { })
             {
-                msg.Content = new StringContent(_config.StringContent);
-            }
-            // Json Content
-            else if (!(_config.JsonContent is null))
-            {
-                //var tt = SS(_config.JsonContent.ToString() ?? string.Empty, data);
-
-                var template = _handlebars.Compile(_config.JsonContent.ToString() ?? string.Empty);
-
-                var result = template(data);
-
-                /*var objet = JsonConvert.DeserializeObject<IDictionary<object, object>>(
-                                 SS(_config.JsonContent.ToString() ?? string.Empty, data),
-                                     new JsonConverter[] {
-                                         new JsonCustomConverter(_stubble, data) });*/
-
-                //var json = JsonConvert.SerializeObject(objet);
-                msg.Content = new StringContent(result, Encoding.GetEncoding(_config.Encoding ?? "UTF-8"), "application/json");
-            }
-            else
-            {
-                throw new NotImplementedException("Json or String content is mandatory.");
+                var basicAuth = Encoding.ASCII.GetBytes(_config.AuthBasic);
+                msg.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Basic", Convert.ToBase64String(basicAuth));
             }
 
             // Adding all headers
-            foreach (var item in _config.Headers)
-            {
-                msg.Headers.TryAddWithoutValidation(item.Key, SS(item.Value, data));
-            }
+            if (_config.Headers is { })
+                foreach (var item in _config.Headers)
+                {
+                    msg.Headers.TryAddWithoutValidation(item.Key, SS(item.Value, data));
+                }
 
             return msg;
         }
@@ -166,7 +157,7 @@ namespace YamlHttpClient
                 foreach (var item in _config.CheckResponse.ThrowExceptionIfBodyContainsAny)
                 {
                     if ((await response.Content.ReadAsStringAsync()).Contains(item))
-                    { 
+                    {
                         throw new ThrowExceptionIfBodyContainsAny(item);
                     }
                 }

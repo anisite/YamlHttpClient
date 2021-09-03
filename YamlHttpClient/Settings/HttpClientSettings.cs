@@ -19,14 +19,8 @@ namespace YamlHttpClient.Settings
         [YamlMember(Alias = "encoding")]
         public string Encoding { get; set; }
         /// <summary />
-        [YamlMember(Alias = "string_content")]
-        public string StringContent { get; set; }
-        /// <summary />
-        [YamlMember(Alias = "json_content")]
-        public string? JsonContent { get; set; }
-        /// <summary />
-        [YamlMember(Alias = "form_content")]
-        public object FormContent { get; set; }
+        [YamlMember(Alias = "content")]
+        public ContentSettings Content { get; set; }
         /// <summary />
         [YamlMember(Alias = "use_default_credentials")]
         public bool UseDefaultCredentials { get; set; }
@@ -36,6 +30,9 @@ namespace YamlHttpClient.Settings
         /// <summary />
         [YamlMember(Alias = "check_response")]
         public CheckResponse? CheckResponse { get; set; }
+        /// <summary />
+        [YamlMember(Alias = "auth_basic")]
+        public string? AuthBasic { get; set; }
         /// <summary />
         [YamlIgnore()]
         public string SettingKey { get; set; }
