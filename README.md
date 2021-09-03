@@ -57,12 +57,13 @@ http_client:
           CodeNT: '{{System.CodeNT}}'
           Accept: 'application/json'
       # Example Json content to send, with token template value replacement by Handlebars.net
-      json_content: |
-        {
-            "someVal": "{{val1}}", 
-            "flattenObj": {{{Json . ">flatten;_;_{0}" ">forcestring"}}}
-            "obj": {{{Json .}}}
-         }
+      content:
+          json_content: |
+            {
+              "someVal": "{{val1}}", 
+              "flattenObj": {{{Json . ">flatten;_;_{0}" ">forcestring"}}}
+              "obj": {{{Json .}}}
+            }
       # Quality assurance if supported by implementation to self check response raw body
       check_response:
         throw_exception_if_body_contains_any:
@@ -71,6 +72,9 @@ http_client:
             - dump
 ```
 
+Where VAR is from passed data.
 ```Handlebars
-    "someVal": "{{val1}}", 
+{{{Json VAR}}} # Simple object to json serialization
+{{{Json VAR ">flatten;.;[{0}]"}}} # Flatten object to one level dictionary. Child naming childName[0].prop
+{{{Json VAR ">flatten;_;_{0}" ">forcestring"}}} # Flatten object to one level dictionary. Child naming childName_0_prop. Force String values.
 ```
