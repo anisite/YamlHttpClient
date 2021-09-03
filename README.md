@@ -78,3 +78,7 @@ Where VAR is from passed data.
 {{{Json VAR ">flatten;.;[{0}]"}}} # Flatten object to one level dictionary. Child naming childName[0].prop
 {{{Json VAR ">flatten;_;_{0}" ">forcestring"}}} # Flatten object to one level dictionary. Child naming childName_0_prop. Force String values.
 ```
+
+## Yaml config sample
+- :white_check_mark: Basic Http Authentication 
+- :white_large_square: Client certificate Authentication
