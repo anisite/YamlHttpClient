@@ -79,6 +79,11 @@ Where VAR is from passed data.
 {{{Json VAR ">flatten;_;_{0}" ">forcestring"}}} # Flatten object to one level dictionary. Child naming childName_0_prop. Force String values.
 ```
 
-## Features
+## Features support checklist
+- :white_check_mark: Support all http methods, POST, GET, DELETE... 
+- :white_check_mark: Send any header
+- :white_check_mark: Send JSON, string, form data, binary files
 - :white_check_mark: Basic Http Authentication 
+- :white_check_mark: NTLM (with use default credentials, app pool auto authentication)
+- :white_large_square: NTLM with user/password
 - :white_large_square: Client certificate Authentication
