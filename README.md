@@ -85,5 +85,6 @@ Where VAR is from passed data.
 - :white_check_mark: Send JSON, string, form data, binary files
 - :white_check_mark: Basic Http Authentication 
 - :white_check_mark: NTLM (with use default credentials, app pool auto authentication)
+- :white_check_mark: Check response content and throw exception if response is not expected
 - :white_large_square: NTLM with user/password
 - :white_large_square: Client certificate Authentication
