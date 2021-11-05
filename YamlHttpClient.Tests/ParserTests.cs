@@ -29,16 +29,20 @@ namespace YamlHttpClient.Tests
 
         [Theory]
         [InlineData("{{{Json obj.0.test}}}", @"null")]
+        [InlineData("{{{Json Indentite.GD_A_N_CIVQ_CORR}}}", @"null")]
+        [InlineData("{{{Json Indentite2.GD_A_N_CIVQ_CORR}}}", @"null")]
         public void Dict_HandleBars_Formatters(string input, string expected)
         {
-            var testObject = new
-            {
-                Identite = new Dictionary<string, object> { { "GD_A_N_CIVQ_CORR", "val1" } }
+
+            var dict = new Dictionary<string, object> {
+                {"Indentite", new Dictionary<string, object> {{ "GD_A_N_CIVQ_CORR", null } }},
+                    { "Indentite2", null }
             };
+
 
             var result = new ContentHandler(YamlHttpClientFactory
                 .CreateHandleBars())
-                .ParseContent(input, testObject);
+                .ParseContent(input, dict);
 
             Assert.Equal(expected, result);
         }

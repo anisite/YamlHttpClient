@@ -27,7 +27,7 @@ namespace YamlHttpClient.Utils
 
                 foreach (var item in arguments)
                 {
-                    if (item.ToString()!.StartsWith(">", StringComparison.InvariantCultureIgnoreCase))
+                    if (item is { } && item.ToString()!.StartsWith(">", StringComparison.InvariantCultureIgnoreCase))
                     {
                         if (item.ToString()!.StartsWith(">flatten", StringComparison.InvariantCultureIgnoreCase))
                         {
