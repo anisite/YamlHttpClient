@@ -1,6 +1,7 @@
 ﻿using HandlebarsDotNet;
 using Newtonsoft.Json;
 using System;
+using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
 
@@ -14,11 +15,11 @@ namespace YamlHttpClient.Utils
         /// </summary>
         public static void AddJsonHelper(this IHandlebars hb)
         {
+            // Json Element
             hb.RegisterHelper("Json", (output, context, arguments) =>
             {
-                var value = new object();
+                var values = new List<object?>();
 
-                var isFirst = true;
                 var flatten = false;
                 var forceString = false;
                 var flatten_separator = ".";
@@ -26,14 +27,9 @@ namespace YamlHttpClient.Utils
 
                 foreach (var item in arguments)
                 {
-                    if (isFirst)
+                    if (item.ToString()!.StartsWith(">", StringComparison.InvariantCultureIgnoreCase))
                     {
-                        value = item;
-                        isFirst = false;
-                    }
-                    else
-                    {
-                        if (item.ToString()!.StartsWith(">flatten", System.StringComparison.InvariantCultureIgnoreCase))
+                        if (item.ToString()!.StartsWith(">flatten", StringComparison.InvariantCultureIgnoreCase))
                         {
                             flatten = true;
 
@@ -53,8 +49,24 @@ namespace YamlHttpClient.Utils
                             forceString = true;
                         }
                     }
+                    else
+                    {
+                        values.Add(item);
+                    }
                 }
-                var json = JsonConvert.SerializeObject(value);
+
+                string? json;
+
+                if (values.Count == 1)
+                    if (values[0] is UndefinedBindingResult)
+                        json = JsonConvert.SerializeObject(null);
+                    else
+                        json = JsonConvert.SerializeObject(values[0]);
+                else if (values.Count == 0)
+                    json = JsonConvert.SerializeObject(values);
+                else
+                    json = JsonConvert.SerializeObject(string.Join("", values));
+
 
                 if (flatten)
                 {
