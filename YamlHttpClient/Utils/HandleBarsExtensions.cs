@@ -13,7 +13,7 @@ namespace YamlHttpClient.Utils
         /// <summary>
         /// Add {{Json myVariable}} to Handlebars
         /// </summary>
-        public static void AddJsonHelper(this IHandlebars hb)
+        public static void AddJsonHelper(this IHandlebars hb, JsonSerializerSettings? jsonSerializerSettings)
         {
             // Json Element
             hb.RegisterHelper("Json", (output, context, arguments) =>
@@ -61,7 +61,7 @@ namespace YamlHttpClient.Utils
                     if (values[0] is UndefinedBindingResult)
                         json = JsonConvert.SerializeObject(null);
                     else
-                        json = JsonConvert.SerializeObject(values[0]);
+                        json = JsonConvert.SerializeObject(values[0], jsonSerializerSettings);
                 else if (values.Count == 0)
                     json = JsonConvert.SerializeObject(values);
                 else

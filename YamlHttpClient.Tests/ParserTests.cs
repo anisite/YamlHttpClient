@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using Xunit;
 
 namespace YamlHttpClient.Tests
@@ -22,6 +23,22 @@ namespace YamlHttpClient.Tests
 
             var result = new ContentHandler(YamlHttpClientFactory
                 .CreateHandleBars())
+                .ParseContent(input, testObject);
+
+            Assert.Equal(expected, result);
+        }
+
+        [Theory]
+        [InlineData("{{{Json obj}}}", @"""2020-02-02""")]
+        public void Date_HandleBars_Formatters(string input, string expected)
+        {
+            var testObject = new
+            {
+                obj = new DateTime(2020, 02, 02)
+            };
+
+            var result = new ContentHandler(YamlHttpClientFactory
+                .CreateHandleBars(new Newtonsoft.Json.JsonSerializerSettings() { DateFormatString = "yyyy-MM-dd" }))
                 .ParseContent(input, testObject);
 
             Assert.Equal(expected, result);

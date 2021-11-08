@@ -35,11 +35,11 @@ namespace YamlHttpClient
         /// <summary>
         /// 
         /// </summary>
-        public YamlHttpClientFactory(HttpClientSettings httpClientSettings)
+        public YamlHttpClientFactory(HttpClientSettings httpClientSettings, JsonSerializerSettings? jsonSerializerSettings = null)
         {
             _uniqueId = httpClientSettings.Url;
             _config = httpClientSettings;
-            _handlebars = CreateHandleBars();
+            _handlebars = CreateHandleBars(jsonSerializerSettings);
             _contentHandler = new ContentHandler(_handlebars);
         }
 
@@ -48,23 +48,25 @@ namespace YamlHttpClient
         /// </summary>
         /// <param name="httpClientSettings"></param>
         /// <param name="defaultClientTimeout"></param>
+        /// <param name="jsonSerializerSettings"></param>
         public YamlHttpClientFactory(HttpClientSettings httpClientSettings,
-                                     TimeSpan defaultClientTimeout) : base(defaultClientTimeout)
+                                     TimeSpan defaultClientTimeout,
+                                     JsonSerializerSettings? jsonSerializerSettings) : base(defaultClientTimeout)
         {
             _uniqueId = httpClientSettings.Url;
             _config = httpClientSettings;
-            _handlebars = CreateHandleBars();
+            _handlebars = CreateHandleBars(jsonSerializerSettings);
             _contentHandler = new ContentHandler(_handlebars);
         }
 
         /// <summary>
         /// </summary>
-        public static IHandlebars CreateHandleBars()
+        public static IHandlebars CreateHandleBars(JsonSerializerSettings? jsonSerializerSettings = null)
         {
             IHandlebars hb;
             hb = Handlebars.Create();
 
-            hb.AddJsonHelper();
+            hb.AddJsonHelper(jsonSerializerSettings);
             hb.AddBase64();
 
             return hb;
