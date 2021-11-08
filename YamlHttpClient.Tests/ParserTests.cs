@@ -38,7 +38,7 @@ namespace YamlHttpClient.Tests
             };
 
             var result = new ContentHandler(YamlHttpClientFactory
-                .CreateHandleBars(new Newtonsoft.Json.JsonSerializerSettings() { DateFormatString = "yyyy-MM-dd" }))
+                .CreateHandleBars(new Newtonsoft.Json.JsonSerializerSettings() { DateFormatString = "yyyy-MM-dd",  }))
                 .ParseContent(input, testObject);
 
             Assert.Equal(expected, result);

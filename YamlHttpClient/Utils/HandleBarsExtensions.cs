@@ -59,9 +59,20 @@ namespace YamlHttpClient.Utils
 
                 if (values.Count == 1)
                     if (values[0] is UndefinedBindingResult)
+                    {
                         json = JsonConvert.SerializeObject(null);
+                    }
                     else
-                        json = JsonConvert.SerializeObject(values[0], jsonSerializerSettings);
+                    {
+                        if(forceString)
+                        {
+                            json = JsonConvert.SerializeObject(values[0]?.ToString(), jsonSerializerSettings);
+                        }
+                        else
+                        {
+                            json = JsonConvert.SerializeObject(values[0], jsonSerializerSettings);
+                        }
+                    }
                 else if (values.Count == 0)
                     json = JsonConvert.SerializeObject(values);
                 else
