@@ -50,13 +50,15 @@ namespace YamlHttpClient.Tests
 
         [Theory]
         [InlineData("{{#ifCond arg1 '=' arg2}}{{arg1}} is eq to {{arg2}}{{else}}{{arg1}} is not eq to {{arg2}}{{/ifCond}}", @"2020-02-02T00:00:00.0000000 is eq to 2020-02-02T00:00:00.0000000")]
-        [InlineData("{{#ifCond arg3 '=' arg2}}{{arg1}} is eq to {{arg2}}{{else}}{{arg1}} is not eq to {{arg2}}{{/ifCond}}", @"")]
+        [InlineData("{{#ifCond arg99 '=' arg2}}{{arg1}} is eq to {{arg2}}{{else}}{{arg1}} is not eq to {{arg2}}{{/ifCond}}", @"")]
+        [InlineData("{{#ifCond arg3 '=' \"M\"}}Masculin{{else}}{{arg1}}Féminin{{/ifCond}}", @"Masculin")]
         public void IfCond_HandleBars_Formatters(string input, string expected)
         {
             var testObject = new
             {
                 arg1 = new DateTime(2020, 02, 02),
-                arg2 = new DateTime(2020, 02, 02)
+                arg2 = new DateTime(2020, 02, 02),
+                arg3 = "M"
             };
 
             var result = new ContentHandler(YamlHttpClientFactory
@@ -74,6 +76,9 @@ namespace YamlHttpClient.Tests
         [InlineData("{{{Json Indentite.GD_A_N_CIVQ_CORR}}}", @"null")]
         [InlineData("{{{Json Indentite2.GD_A_N_CIVQ_CORR}}}", @"null")]
         [InlineData(@"{{{Json GDI.num "">forcestring""}}}", "\"123\"")]
+        [InlineData(@"{{{Json GDI.num}}}", "123.0")]
+        [InlineData(@"{{{Json GDI.num GDI.num}}}", "\"123123\"")]
+        [InlineData(@"{{{Json GDI.empty GDI.empty}}}", "\"\"")]
         public void Dict_HandleBars_Formatters(string input, string expected)
         {
 

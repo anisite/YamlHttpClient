@@ -74,10 +74,22 @@ namespace YamlHttpClient.Utils
                         }
                     }
                 else if (values.Count == 0)
+                { 
                     json = JsonConvert.SerializeObject(values);
+                }
                 else
-                    json = JsonConvert.SerializeObject(string.Join("", values));
+                {
+                    var concatStr = string.Empty;
 
+                    foreach (var item in values)
+                    {
+                        if (!(item is UndefinedBindingResult))
+                        {
+                            concatStr += item?.ToString();
+                        }
+                    }
+                    json = JsonConvert.SerializeObject(concatStr);
+                }
 
                 if (flatten)
                 {
