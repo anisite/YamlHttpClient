@@ -73,14 +73,15 @@ namespace YamlHttpClient.Tests
         [InlineData("{{{Json obj.0.test}}}", @"null")]
         [InlineData("{{{Json Indentite.GD_A_N_CIVQ_CORR}}}", @"null")]
         [InlineData("{{{Json Indentite2.GD_A_N_CIVQ_CORR}}}", @"null")]
+        [InlineData(@"{{{Json GDI.num "">forcestring""}}}", "\"123\"")]
         public void Dict_HandleBars_Formatters(string input, string expected)
         {
 
             var dict = new Dictionary<string, object> {
                 {"Indentite", new Dictionary<string, object> {{ "GD_A_N_CIVQ_CORR", null } }},
-                    { "Indentite2", null }
+                { "Indentite2", null },
+                { "GDI", new Dictionary<string, object> {{ "num", 123m } }}
             };
-
 
             var result = new ContentHandler(YamlHttpClientFactory
                 .CreateDefaultHandleBars())
