@@ -13,7 +13,7 @@ namespace YamlHttpClient.Utils
         /// <summary>
         /// Add {{Json myVariable}} to Handlebars
         /// </summary>
-        public static void AddJsonHelper(this IHandlebars hb, JsonSerializerSettings? jsonSerializerSettings)
+        public static IHandlebars AddJsonHelper(this IHandlebars hb, JsonSerializerSettings? jsonSerializerSettings = null)
         {
             // Json Element
             hb.RegisterHelper("Json", (output, context, arguments) =>
@@ -64,7 +64,7 @@ namespace YamlHttpClient.Utils
                     }
                     else
                     {
-                        if(forceString)
+                        if (forceString && !flatten)
                         {
                             json = JsonConvert.SerializeObject(values[0]?.ToString(), jsonSerializerSettings);
                         }
@@ -87,9 +87,11 @@ namespace YamlHttpClient.Utils
 
                 output.Write(json);
             });
+
+            return hb;
         }
 
-        public static void AddBase64(this IHandlebars hb)
+        public static IHandlebars AddBase64(this IHandlebars hb)
         {
             hb.RegisterHelper("Base64", (output, context, arguments) =>
             {
@@ -117,6 +119,146 @@ namespace YamlHttpClient.Utils
                 }
                 //var b64 = Convert.FromBase64String(arguments[0]?.ToString() ?? string.Empty);
             });
+
+            return hb;
+        }
+
+        public static IHandlebars AddIfCond(this IHandlebars hb, bool skipNull)
+        {
+            hb.RegisterHelper("ifCond", (writer, options, context, args) =>
+            {
+                if (args.Length != 3)
+                {
+                    writer.Write("ifCond:Wrong number of arguments");
+                    return;
+                }
+                if (args[0] == null || args[0].GetType().Name == "UndefinedBindingResult")
+                {
+                    if (!skipNull)
+                    {
+                        writer.Write("ifCond:args[0] undefined");
+                    }
+                    return;
+                }
+                if (args[1] == null || args[1].GetType().Name == "UndefinedBindingResult")
+                {
+                    writer.Write("ifCond:args[1] undefined");
+                    return;
+                }
+                if (args[2] == null || args[2].GetType().Name == "UndefinedBindingResult")
+                {
+                    if (!skipNull)
+                    {
+                        writer.Write("ifCond:args[2] undefined");
+                    }
+                    return;
+                   
+                }
+                if (args[0].GetType().Name == "String")
+                {
+                    var val1 = args[0].ToString();
+                    var val2 = args[2].ToString();
+
+                    switch (args[1].ToString())
+                    {
+                        case ">":
+                            if (val1!.Length > val2!.Length)
+                            {
+                                options.Template(writer, context);
+                            }
+                            else
+                            {
+                                options.Inverse(writer, context);
+                            }
+                            break;
+                        case "=":
+                        case "==":
+                            if (val1 == val2)
+                            {
+                                options.Template(writer, context);
+                            }
+                            else
+                            {
+                                options.Inverse(writer, context);
+                            }
+                            break;
+                        case "<":
+                            if (val1!.Length < val2!.Length)
+                            {
+                                options.Template(writer, context);
+                            }
+                            else
+                            {
+                                options.Inverse(writer, context);
+                            }
+                            break;
+                        case "!=":
+                        case "<>":
+                            if (val1 != val2)
+                            {
+                                options.Template(writer, context);
+                            }
+                            else
+                            {
+                                options.Inverse(writer, context);
+                            }
+                            break;
+                    }
+                }
+                else
+                {
+                    object val1 = args[0];
+                    object val2 = args[2];
+
+                    switch (args[1].ToString())
+                    {
+                        case ">":
+                            if (float.Parse(val1.ToString()!) > float.Parse(val2.ToString()!))
+                            {
+                                options.Template(writer, context);
+                            }
+                            else
+                            {
+                                options.Inverse(writer, context);
+                            }
+                            break;
+                        case "=":
+                        case "==":
+                            if (val1.Equals(val2))
+                            {
+                                options.Template(writer, context);
+                            }
+                            else
+                            {
+                                options.Inverse(writer, context);
+                            }
+                            break;
+                        case "<":
+                            if (float.Parse(val1.ToString()!) < float.Parse(val2.ToString()!))
+                            {
+                                options.Template(writer, context);
+                            }
+                            else
+                            {
+                                options.Inverse(writer, context);
+                            }
+                            break;
+                        case "!=":
+                        case "<>":
+                            if (!val1.Equals(val2))
+                            {
+                                options.Template(writer, context);
+                            }
+                            else
+                            {
+                                options.Inverse(writer, context);
+                            }
+                            break;
+                    }
+                }
+            });
+
+            return hb;
         }
     }
 }

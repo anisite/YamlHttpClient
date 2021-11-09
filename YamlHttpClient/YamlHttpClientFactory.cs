@@ -35,11 +35,11 @@ namespace YamlHttpClient
         /// <summary>
         /// 
         /// </summary>
-        public YamlHttpClientFactory(HttpClientSettings httpClientSettings, JsonSerializerSettings? jsonSerializerSettings = null)
+        public YamlHttpClientFactory(HttpClientSettings httpClientSettings, IHandlebars? handlebars = null)
         {
             _uniqueId = httpClientSettings.Url;
             _config = httpClientSettings;
-            _handlebars = CreateHandleBars(jsonSerializerSettings);
+            _handlebars = handlebars ?? CreateDefaultHandleBars();
             _contentHandler = new ContentHandler(_handlebars);
         }
 
@@ -47,27 +47,38 @@ namespace YamlHttpClient
         /// Create a new instance of YamlHttpClientFactory
         /// </summary>
         /// <param name="httpClientSettings"></param>
+        /// <param name="handlebars"></param>
         /// <param name="defaultClientTimeout"></param>
-        /// <param name="jsonSerializerSettings"></param>
         public YamlHttpClientFactory(HttpClientSettings httpClientSettings,
-                                     TimeSpan defaultClientTimeout,
-                                     JsonSerializerSettings? jsonSerializerSettings) : base(defaultClientTimeout)
+                                     TimeSpan defaultClientTimeout, 
+                                     IHandlebars? handlebars = null) : base(defaultClientTimeout)
         {
             _uniqueId = httpClientSettings.Url;
             _config = httpClientSettings;
-            _handlebars = CreateHandleBars(jsonSerializerSettings);
+            _handlebars = handlebars ?? CreateDefaultHandleBars();
             _contentHandler = new ContentHandler(_handlebars);
         }
 
         /// <summary>
         /// </summary>
-        public static IHandlebars CreateHandleBars(JsonSerializerSettings? jsonSerializerSettings = null)
+        public static IHandlebars CreateDefaultHandleBars()
         {
             IHandlebars hb;
             hb = Handlebars.Create();
 
-            hb.AddJsonHelper(jsonSerializerSettings);
+            hb.AddJsonHelper();
             hb.AddBase64();
+            hb.AddIfCond(false);
+
+            return hb;
+        }
+
+        /// <summary>
+        /// </summary>
+        public static IHandlebars CreateEmptyHandleBars()
+        {
+            IHandlebars hb;
+            hb = Handlebars.Create();
 
             return hb;
         }

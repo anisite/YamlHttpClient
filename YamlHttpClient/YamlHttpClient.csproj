@@ -10,7 +10,7 @@
 		<PackageProjectUrl>https://github.com/anisite/YamlHttpClient</PackageProjectUrl>
 		<RepositoryUrl>https://github.com/anisite/YamlHttpClient</RepositoryUrl>
 		<PackageLicenseFile>LICENSE</PackageLicenseFile>
-		<Version>1.0.0-rc4</Version>
+		<Version>1.0.0-rc5</Version>
 		<Description>Yaml config based .net HttpClient</Description>
 	</PropertyGroup>
 
