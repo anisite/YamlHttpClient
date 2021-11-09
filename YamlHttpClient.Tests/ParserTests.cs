@@ -51,7 +51,7 @@ namespace YamlHttpClient.Tests
         [Theory]
         [InlineData("{{#ifCond arg1 '=' arg2}}{{arg1}} is eq to {{arg2}}{{else}}{{arg1}} is not eq to {{arg2}}{{/ifCond}}", @"2020-02-02T00:00:00.0000000 is eq to 2020-02-02T00:00:00.0000000")]
         [InlineData("{{#ifCond arg99 '=' arg2}}{{arg1}} is eq to {{arg2}}{{else}}{{arg1}} is not eq to {{arg2}}{{/ifCond}}", @"")]
-        [InlineData("{{#ifCond arg3 '=' \"M\"}}Masculin{{else}}{{arg1}}Féminin{{/ifCond}}", @"Masculin")]
+        [InlineData("{{#ifCond arg3 '=' \"M\"}}{{{Json \"Masculin\"}}}{{else}}{{arg1}}{{{Json \"Féminin\"}}}{{/ifCond}}", "\"Masculin\"")]
         public void IfCond_HandleBars_Formatters(string input, string expected)
         {
             var testObject = new
