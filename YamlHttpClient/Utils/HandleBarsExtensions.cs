@@ -166,7 +166,7 @@ namespace YamlHttpClient.Utils
                     return;
                    
                 }
-                if (args[0].GetType().Name == "String")
+                if (args[0].GetType().Name == "String" || args[0].GetType().Name == "Char")
                 {
                     var val1 = args[0].ToString();
                     var val2 = args[2].ToString();

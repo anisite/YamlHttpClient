@@ -58,7 +58,7 @@ namespace YamlHttpClient.Tests
             {
                 arg1 = new DateTime(2020, 02, 02),
                 arg2 = new DateTime(2020, 02, 02),
-                arg3 = "M"
+                arg3 = 'M'
             };
 
             var result = new ContentHandler(YamlHttpClientFactory
