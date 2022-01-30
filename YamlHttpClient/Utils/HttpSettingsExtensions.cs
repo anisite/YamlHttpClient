@@ -22,6 +22,7 @@ namespace YamlHttpClient.Utils
         {
             var builder = new DeserializerBuilder()
                 .WithNamingConvention(NullNamingConvention.Instance)
+                .IgnoreUnmatchedProperties()
                 .Build();
 
             yamlHttpClientConfig = builder
@@ -41,6 +42,7 @@ namespace YamlHttpClient.Utils
         {
             var builder = new DeserializerBuilder()
                 .WithNamingConvention(NullNamingConvention.Instance)
+                .IgnoreUnmatchedProperties()
                 .Build();
 
             yamlHttpClientConfig = builder
@@ -62,6 +64,7 @@ namespace YamlHttpClient.Utils
             {
                 var builder = new DeserializerBuilder()
                     .WithNamingConvention(NullNamingConvention.Instance)
+                    .IgnoreUnmatchedProperties()
                     .Build();
 
                 yamlHttpClientConfig = builder

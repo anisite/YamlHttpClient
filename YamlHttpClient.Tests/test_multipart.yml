@@ -1,4 +1,5 @@
-﻿http_client:
+﻿other_crap: ignore #Don't crash on unknown keys
+http_client:
   myHttpCall:
       method: POST
       url: https://ptsv2.com/t/{{place}}/post
