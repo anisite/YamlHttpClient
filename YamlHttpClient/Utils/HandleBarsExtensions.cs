@@ -66,7 +66,25 @@ namespace YamlHttpClient.Utils
                     {
                         if (forceString && !flatten)
                         {
-                            json = JsonConvert.SerializeObject(values[0]?.ToString(), jsonSerializerSettings);
+                            if (values[0] is { })
+                            {
+                                Type t = values[0].GetType();
+                                bool isPrimitiveType = t.IsPrimitive || t.IsValueType || (t == typeof(string));
+
+                                if (isPrimitiveType)
+                                {
+                                    json = JsonConvert.SerializeObject(values[0]?.ToString(), jsonSerializerSettings);
+                                }
+                                else
+                                {
+                                    json = JsonConvert.SerializeObject(values[0], jsonSerializerSettings);
+                                    json = JsonConvert.ToString(json);
+                                }
+                            }
+                            else
+                            {
+                                json = null;
+                            }
                         }
                         else
                         {
@@ -74,7 +92,7 @@ namespace YamlHttpClient.Utils
                         }
                     }
                 else if (values.Count == 0)
-                { 
+                {
                     json = JsonConvert.SerializeObject(values);
                 }
                 else
@@ -164,7 +182,7 @@ namespace YamlHttpClient.Utils
                         writer.Write("ifCond:args[2] undefined");
                     }
                     return;
-                   
+
                 }
                 if (args[0].GetType().Name == "String" || args[0].GetType().Name == "Char")
                 {

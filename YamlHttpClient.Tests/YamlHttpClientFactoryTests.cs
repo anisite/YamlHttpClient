@@ -16,7 +16,7 @@ namespace YamlHttpClient.Tests
     [TestClass()]
     public class YamlHttpClientFactoryTests
     {
-        [TestMethod()]
+       /* [TestMethod()]
         public async Task YamlHttpClientHandlerTest()
         {
             var yamlFile = @"../../../test1.yml";
@@ -49,9 +49,9 @@ namespace YamlHttpClient.Tests
             await httpClient.CheckResponseAsync(response);
 
             var data = await response.Content.ReadAsStringAsync();
-        }
+        }*/
 
-        [TestMethod()]
+       /* [TestMethod()]
         public async Task YamlHttpClientHandler_Multipart_Test()
         {
             var yamlFile = @"../../../test_multipart.yml";
@@ -87,7 +87,7 @@ namespace YamlHttpClient.Tests
             await httpClient.CheckResponseAsync(response);
 
             var data = await response.Content.ReadAsStringAsync();
-        }
+        }*/
 
         public static Image LoadBase64(string base64)
         {

@@ -14,6 +14,7 @@ namespace YamlHttpClient.Tests
         [InlineData("{{{Json obj.0.test \", \" obj.1.test}}}", @"""1, 2""")]
         [InlineData("{{{Json obj.88.test}}}", @"null")]
         [InlineData("{{{Json .}}}", @"{""obj"":[{""test"":1},{""test"":2}]}")]
+        [InlineData(@"{{{Json . "">forcestring""}}}}", @"""{\""obj\"":[{\""test\"":1},{\""test\"":2}]}""")]
         [InlineData(@"{{{Json . "">flatten;_;_{0}"" "">forcestring""}}}}", @"{""obj_0_test"":""1"",""obj_1_test"":""2""}")]
         [InlineData(@"{{{Json . "">flatten;_;_{0}""}}}}", @"{""obj_0_test"":1,""obj_1_test"":2}")]
         [InlineData(@"{{{Json . "">flatten;.;[{0}]""}}}}", @"{""obj[0].test"":1,""obj[1].test"":2}")]
