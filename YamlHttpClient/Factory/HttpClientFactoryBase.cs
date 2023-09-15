@@ -14,7 +14,7 @@ namespace YamlHttpClient.Factory
     public abstract class YamlHttpClientFactoryBase : IYamlHttpClientFactory
     {
         private readonly ConcurrentDictionary<string, IYamlHttpClient> _clients = new ConcurrentDictionary<string, IYamlHttpClient>();
-        private readonly TimeSpan _defaultClientTimeout = TimeSpan.FromSeconds(100);// same as HttpClient default value
+        public TimeSpan DefaultClientTimeout { get; set; } = TimeSpan.FromSeconds(100);// same as HttpClient default value
 
         /// <summary>
         /// Ctor of base class
@@ -29,7 +29,7 @@ namespace YamlHttpClient.Factory
         /// <param name="defaultClientTimeout">Delay before timeout</param>
         protected YamlHttpClientFactoryBase(TimeSpan defaultClientTimeout)
         {
-            _defaultClientTimeout = defaultClientTimeout;
+            DefaultClientTimeout = defaultClientTimeout;
         }
 
         /// <summary>
@@ -99,7 +99,7 @@ namespace YamlHttpClient.Factory
         {
             return new HttpClient(handler)
             {
-                Timeout = _defaultClientTimeout
+                Timeout = DefaultClientTimeout
             };
         }
 

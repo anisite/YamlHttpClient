@@ -25,12 +25,24 @@ namespace YamlHttpClient
     /// <summary>
     /// Yaml config based HttpClient
     /// </summary>
-    public class YamlHttpClientFactory : YamlHttpClientFactoryBase
+    public class YamlHttpClientFactory : YamlHttpClientFactoryBase, IYamlHttpClientAccessor
     {
-        private readonly HttpClientSettings _config;
         private readonly string _uniqueId;
-        private readonly IHandlebars _handlebars;
         private readonly IContentHandler _contentHandler;
+
+        /// <summary>
+        /// Config
+        /// </summary>
+        public HttpClientSettings HttpClientSettings { get; set; }
+
+        /// <summary>
+        /// Handlebars
+        /// </summary>
+        public IHandlebars HandlebarsProvider { get; set; }
+
+        public YamlHttpClientFactory()
+        {
+        }
 
         /// <summary>
         /// 
@@ -38,9 +50,9 @@ namespace YamlHttpClient
         public YamlHttpClientFactory(HttpClientSettings httpClientSettings, IHandlebars? handlebars = null)
         {
             _uniqueId = httpClientSettings.Url;
-            _config = httpClientSettings;
-            _handlebars = handlebars ?? CreateDefaultHandleBars();
-            _contentHandler = new ContentHandler(_handlebars);
+            HttpClientSettings = httpClientSettings;
+            HandlebarsProvider = handlebars ?? CreateDefaultHandleBars();
+            _contentHandler = new ContentHandler(HandlebarsProvider);
         }
 
         /// <summary>
@@ -54,9 +66,9 @@ namespace YamlHttpClient
                                      IHandlebars? handlebars = null) : base(defaultClientTimeout)
         {
             _uniqueId = httpClientSettings.Url;
-            _config = httpClientSettings;
-            _handlebars = handlebars ?? CreateDefaultHandleBars();
-            _contentHandler = new ContentHandler(_handlebars);
+            HttpClientSettings = httpClientSettings;
+            HandlebarsProvider = handlebars ?? CreateDefaultHandleBars();
+            _contentHandler = new ContentHandler(HandlebarsProvider);
         }
 
         /// <summary>
@@ -84,11 +96,6 @@ namespace YamlHttpClient
         }
 
         /// <summary>
-        /// Config
-        /// </summary>
-        public HttpClientSettings HttpClientSettings => _config;
-
-        /// <summary>
         /// Cache key
         /// </summary>
         /// <returns></returns>
@@ -114,21 +121,21 @@ namespace YamlHttpClient
         /// <returns></returns>
         public HttpRequestMessage BuildRequestMessage(dynamic data)
         {
-            var msg = new HttpRequestMessage(new HttpMethod(_config.Method),
-                                                            SS(_config.Url, data));
+            var msg = new HttpRequestMessage(new HttpMethod(HttpClientSettings.Method),
+                                                            SS(HttpClientSettings.Url, data));
 
-            msg.Content = _contentHandler.Content(data, _config.Content);
+            msg.Content = _contentHandler.Content(data, HttpClientSettings.Content);
 
             // Check If Basic authentication 
-            if (_config.AuthBasic is { })
+            if (HttpClientSettings.AuthBasic is { })
             {
-                var basicAuth = Encoding.ASCII.GetBytes(_config.AuthBasic);
+                var basicAuth = Encoding.ASCII.GetBytes(HttpClientSettings.AuthBasic);
                 msg.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Basic", Convert.ToBase64String(basicAuth));
             }
 
             // Adding all headers
-            if (_config.Headers is { })
-                foreach (var item in _config.Headers)
+            if (HttpClientSettings.Headers is { })
+                foreach (var item in HttpClientSettings.Headers)
                 {
                     msg.Headers.TryAddWithoutValidation(item.Key, SS(item.Value, data));
                 }
@@ -165,9 +172,9 @@ namespace YamlHttpClient
         /// <returns></returns>
         public async Task CheckResponseAsync(HttpResponseMessage response)
         {
-            if (_config.CheckResponse?.ThrowExceptionIfBodyContainsAny?.Any() ?? false)
+            if (HttpClientSettings.CheckResponse?.ThrowExceptionIfBodyContainsAny?.Any() ?? false)
             {
-                foreach (var item in _config.CheckResponse.ThrowExceptionIfBodyContainsAny)
+                foreach (var item in HttpClientSettings.CheckResponse.ThrowExceptionIfBodyContainsAny)
                 {
                     if ((await response.Content.ReadAsStringAsync()).Contains(item))
                     {
@@ -176,9 +183,9 @@ namespace YamlHttpClient
                 }
             }
 
-            if (_config.CheckResponse?.ThrowExceptionIfBodyNotContainAll?.Any() ?? false)
+            if (HttpClientSettings.CheckResponse?.ThrowExceptionIfBodyNotContainAll?.Any() ?? false)
             {
-                foreach (var item in _config.CheckResponse.ThrowExceptionIfBodyNotContainAll)
+                foreach (var item in HttpClientSettings.CheckResponse.ThrowExceptionIfBodyNotContainAll)
                 {
                     if (!(await response.Content.ReadAsStringAsync()).Contains(item))
                     {
@@ -208,7 +215,7 @@ namespace YamlHttpClient
                 };
             }
 
-            handler.UseDefaultCredentials = _config.UseDefaultCredentials;
+            handler.UseDefaultCredentials = HttpClientSettings.UseDefaultCredentials;
             handler.AllowAutoRedirect = true;
 
             return handler;
@@ -222,7 +229,7 @@ namespace YamlHttpClient
         /// <returns></returns>
         private string SS(string value, object data)
         {
-            var comp = _handlebars.Compile(value);
+            var comp = HandlebarsProvider.Compile(value);
             return comp(data);
         }
     }

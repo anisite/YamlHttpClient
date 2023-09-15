@@ -80,13 +80,39 @@ namespace YamlHttpClient.Tests
         [InlineData(@"{{{Json GDI.num}}}", "123.0")]
         [InlineData(@"{{{Json GDI.num GDI.num}}}", "\"123123\"")]
         [InlineData(@"{{{Json GDI.empty GDI.empty}}}", "\"\"")]
+        [InlineData(@"{{{GDI.num}}}", "123")]
+        [InlineData(@"{{D1.D2.V1}}", "YES")]
         public void Dict_HandleBars_Formatters(string input, string expected)
         {
 
             var dict = new Dictionary<string, object> {
                 {"Indentite", new Dictionary<string, object> {{ "GD_A_N_CIVQ_CORR", null } }},
                 { "Indentite2", null },
-                { "GDI", new Dictionary<string, object> {{ "num", 123m } }}
+                { "GDI", new Dictionary<string, object> {{ "num", 123m } }},
+                { "D1", new Dictionary<string, object> {{ "D2", new Dictionary<string, object> { { "V1", "YES" } } } }}
+            };
+
+            var result = new ContentHandler(YamlHttpClientFactory
+                .CreateDefaultHandleBars())
+                .ParseContent(input, dict);
+
+            Assert.Equal(expected, result);
+        }
+
+        [Theory]
+        [InlineData(@"{{obj.D1.D2.V1}}", "YES")]
+        [InlineData(@"{{obj.D1.D2}}", "[V1, YES]")]
+        public void Obj_Dict_HandleBars_Formatters(string input, string expected)
+        {
+
+            var dict = new
+            {
+                obj = new Dictionary<string, object> {
+                        {"Indentite", new Dictionary<string, object> {{ "GD_A_N_CIVQ_CORR", null } }},
+                        { "Indentite2", null },
+                        { "GDI", new Dictionary<string, object> {{ "num", 123m } }},
+                        { "D1", new Dictionary<string, object> {{ "D2", new Dictionary<string, object> { { "V1", "YES" } } } }}
+                    }
             };
 
             var result = new ContentHandler(YamlHttpClientFactory
