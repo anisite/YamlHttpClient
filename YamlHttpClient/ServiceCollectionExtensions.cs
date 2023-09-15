@@ -10,8 +10,6 @@ namespace YamlHttpClient
     {
         public static IServiceCollection AddYamlHttpClientAccessor(this IServiceCollection services)
         {
-            services.AddOptions();
-
             services.AddTransient<IYamlHttpClientAccessor, YamlHttpClientFactory>();
 
             return services;

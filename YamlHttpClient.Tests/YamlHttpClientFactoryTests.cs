@@ -10,6 +10,7 @@ using YamlHttpClient.Settings;
 using System.Drawing;
 using System.IO;
 using Microsoft.Extensions.DependencyInjection;
+using Moq;
 
 namespace YamlHttpClient.Tests
 {
@@ -26,6 +27,31 @@ namespace YamlHttpClient.Tests
             var restService = provider.GetRequiredService<IYamlHttpClientAccessor>();
 
             Assert.IsNotNull(restService);
+        }
+
+        [TestMethod()]
+        public async Task YamlHttpClientHandler_IServiceProvider2()
+        {
+            var mock = new Mock<YamlHttpClientFactory>();
+
+            mock.CallBase = true;
+
+            mock.Setup(e => e.SendAsync(It.IsAny<HttpRequestMessage>())).ReturnsAsync(new HttpResponseMessage { Content = new StringContent("test") });
+
+            var services = new ServiceCollection();
+            services.AddTransient<IYamlHttpClientAccessor>(e => { return mock.Object; });
+
+            var provider = services.BuildServiceProvider();
+            var restService = provider.GetRequiredService<IYamlHttpClientAccessor>();
+
+            restService.HttpClientSettings = new HttpClientSettings { Method = "POST", Url = "", Content = new ContentSettings { JsonContent = "{}" } };
+            restService.HandlebarsProvider = YamlHttpClientFactory.CreateDefaultHandleBars();
+
+            var demo = restService.BuildRequestMessage(new { test = "empty" });
+
+            var test = await restService.SendAsync(demo);
+
+            Assert.AreEqual("test", await test.Content.ReadAsStringAsync());
         }
 
         /* [TestMethod()]

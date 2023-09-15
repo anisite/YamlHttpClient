@@ -42,6 +42,7 @@ namespace YamlHttpClient
 
         public YamlHttpClientFactory()
         {
+            HandlebarsProvider = CreateDefaultHandleBars();
         }
 
         /// <summary>
@@ -124,7 +125,7 @@ namespace YamlHttpClient
             var msg = new HttpRequestMessage(new HttpMethod(HttpClientSettings.Method),
                                                             SS(HttpClientSettings.Url, data));
 
-            msg.Content = _contentHandler.Content(data, HttpClientSettings.Content);
+            msg.Content = (_contentHandler ?? new ContentHandler(HandlebarsProvider)).Content(data, HttpClientSettings.Content);
 
             // Check If Basic authentication 
             if (HttpClientSettings.AuthBasic is { })
@@ -148,7 +149,7 @@ namespace YamlHttpClient
         /// </summary>
         /// <param name="httpRequestMessage"></param>
         /// <returns></returns>
-        public Task<HttpResponseMessage> SendAsync(HttpRequestMessage httpRequestMessage)
+        public virtual Task<HttpResponseMessage> SendAsync(HttpRequestMessage httpRequestMessage)
         {
             var client = GetHttpClient();
             return client.SendAsync(httpRequestMessage);
