@@ -27,7 +27,7 @@ namespace YamlHttpClient
     /// </summary>
     public class YamlHttpClientFactory : YamlHttpClientFactoryBase, IYamlHttpClientAccessor
     {
-        private readonly string _uniqueId;
+        private string _uniqueId => HttpClientSettings.Url;
         private readonly IContentHandler _contentHandler;
 
         /// <summary>
@@ -50,7 +50,6 @@ namespace YamlHttpClient
         /// </summary>
         public YamlHttpClientFactory(HttpClientSettings httpClientSettings, IHandlebars? handlebars = null)
         {
-            _uniqueId = httpClientSettings.Url;
             HttpClientSettings = httpClientSettings;
             HandlebarsProvider = handlebars ?? CreateDefaultHandleBars();
             _contentHandler = new ContentHandler(HandlebarsProvider);
@@ -66,7 +65,6 @@ namespace YamlHttpClient
                                      TimeSpan defaultClientTimeout, 
                                      IHandlebars? handlebars = null) : base(defaultClientTimeout)
         {
-            _uniqueId = httpClientSettings.Url;
             HttpClientSettings = httpClientSettings;
             HandlebarsProvider = handlebars ?? CreateDefaultHandleBars();
             _contentHandler = new ContentHandler(HandlebarsProvider);
