@@ -11,6 +11,9 @@ using System.Drawing;
 using System.IO;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
+#if NET6_0_OR_GREATER
+using RestMockCore;
+#endif
 
 namespace YamlHttpClient.Tests
 {
@@ -54,40 +57,49 @@ namespace YamlHttpClient.Tests
             Assert.AreEqual("test", await test.Content.ReadAsStringAsync());
         }
 
-        /* [TestMethod()]
-         public async Task YamlHttpClientHandlerTest()
-         {
-             var yamlFile = @"../../../test1.yml";
+        #if NET6_0_OR_GREATER
+        [TestMethod()]
+        public async Task YamlHttpClientHandlerTest()
+        {
+            var yamlFile = @"../../../test1.yml";
 
-             var str = System.IO.File.ReadAllText(yamlFile);
+            var str = System.IO.File.ReadAllText(yamlFile);
 
-             YamlHttpClientFactory httpClient = new YamlHttpClientFactory(new YamlHttpClientConfigBuilder().LoadFromString(str, "myHttpCall"));
+            using HttpServer mockServer = new HttpServer(5001);
 
-             var testObject = new
-             {
-                 table = new[] { "v1", "v2" },
-                 date = new DateTime(2000, 1, 1),
-                 date2 = new DateTime(2000, 1, 1, 2, 2, 2),
-                 obj = new[] { new { test = 1 }, new { test = 2 } },
-                 val1 = new Dictionary<string, object>() { { "testkey", "testval" } },
-                 place = "yty",
-                 System = new { CodeNT = @"mes\cotda05" }
-             };
+            mockServer.Config.Post("/post")
+                             .Send("{ \"result\": \"dump\"}")
+                             .Verifiable();
+            mockServer.Run();
 
-             // Build message
-             var request = httpClient.BuildRequestMessage(testObject);
+            YamlHttpClientFactory httpClient = new YamlHttpClientFactory(new YamlHttpClientConfigBuilder().LoadFromString(str, "myHttpCall"));
 
-             // Inspect content if needed
-             var readContent = await request.Content.ReadAsStringAsync();
+            var testObject = new
+            {
+                table = new[] { "v1", "v2" },
+                date = new DateTime(2000, 1, 1),
+                date2 = new DateTime(2000, 1, 1, 2, 2, 2),
+                obj = new[] { new { test = 1 }, new { test = 2 } },
+                val1 = new Dictionary<string, object>() { { "testkey", "testval" } },
+                place = "yty",
+                System = new { CodeNT = @"mes\cotda05" }
+            };
 
-             // Send it
-             var response = await httpClient.SendAsync(request);
+            // Build message
+            var request = httpClient.BuildRequestMessage(testObject);
 
-             //Do something with response
-             await httpClient.CheckResponseAsync(response);
+            // Inspect content if needed
+            var readContent = await request.Content.ReadAsStringAsync();
 
-             var data = await response.Content.ReadAsStringAsync();
-         }*/
+            // Send it
+            var response = await httpClient.SendAsync(request);
+
+            //Do something with response
+            await httpClient.CheckResponseAsync(response);
+
+            var data = await response.Content.ReadAsStringAsync();
+        }
+#endif
 
         /* [TestMethod()]
          public async Task YamlHttpClientHandler_Multipart_Test()

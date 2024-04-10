@@ -24,4 +24,16 @@
 		<ProjectReference Include="..\YamlHttpClient\YamlHttpClient.csproj" />
 	</ItemGroup>
 
+	<ItemGroup Condition="'$(TargetFramework)' == 'net6.0'">
+	  <PackageReference Include="rest-mock-core">
+	    <Version>0.7.12</Version>
+	  </PackageReference>
+	</ItemGroup>
+
+	<ItemGroup Condition="'$(TargetFramework)' == 'net7.0'">
+	  <PackageReference Include="rest-mock-core">
+	    <Version>0.7.12</Version>
+	  </PackageReference>
+	</ItemGroup>
+
 </Project>

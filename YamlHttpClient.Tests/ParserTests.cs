@@ -82,6 +82,7 @@ namespace YamlHttpClient.Tests
         [InlineData(@"{{{Json GDI.empty GDI.empty}}}", "\"\"")]
         [InlineData(@"{{{GDI.num}}}", "123")]
         [InlineData(@"{{D1.D2.V1}}", "YES")]
+        [InlineData(@"{{Json D1.D2.V1}}", "&quot;YES&quot;")]
         public void Dict_HandleBars_Formatters(string input, string expected)
         {
 
@@ -89,7 +90,7 @@ namespace YamlHttpClient.Tests
                 {"Indentite", new Dictionary<string, object> {{ "GD_A_N_CIVQ_CORR", null } }},
                 { "Indentite2", null },
                 { "GDI", new Dictionary<string, object> {{ "num", 123m } }},
-                { "D1", new Dictionary<string, object> {{ "D2", new Dictionary<string, object> { { "V1", "YES" } } } }}
+                { "D1", new Dictionary<string, object> {{ "D2", (object)new Dictionary<string, object> { { "V1", "YES" } } } }}
             };
 
             var result = new ContentHandler(YamlHttpClientFactory
@@ -97,6 +98,35 @@ namespace YamlHttpClient.Tests
                 .ParseContent(input, dict);
 
             Assert.Equal(expected, result);
+        }
+
+        [Theory]
+        [InlineData(@"{{Json Hop.D1.D2.V1.0}}", "&quot;p1&quot;")]
+        public void Dict_Objct_HandleBars_Formatters(string input, string expected)
+        {
+
+            var dict = new TestObj
+            {
+                Hop = new Dictionary<string, object> {
+                {"Indentite", new Dictionary<string, object> {{ "GD_A_N_CIVQ_CORR", null } }},
+                { "Indentite2", null },
+                { "GDI", new Dictionary<string, object> {{ "num", 123m } }},
+                { "D1", new Dictionary<string, object> {{ "D2", (object)new Dictionary<string, object> { { "V1", new string[] {"p1","p2" } } } } }}
+            }
+            };
+
+            var result = new ContentHandler(YamlHttpClientFactory
+                .CreateDefaultHandleBars())
+                .ParseContent(input, dict);
+
+            Assert.Equal(expected, result);
+        }
+
+        public class TestObj
+        {
+            public TestObj() { }
+
+            public IDictionary<string, object> Hop { get; set; }
         }
 
         [Theory]

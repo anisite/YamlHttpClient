@@ -1,7 +1,7 @@
 ﻿http_client:
   myHttpCall:
       method: POST
-      url: https://ptsv2.com/t/{{place}}/post
+      url: http://localhost:5001/post
       use_default_credentials: true
       headers:
           CodeNT: '{{System.CodeNT}}'
