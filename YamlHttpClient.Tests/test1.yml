@@ -20,6 +20,21 @@
         throw_exception_if_body_not_contains_all:
             - dump
 
+  myHttpCallCrash:
+      method: POST
+      url: http://localhost:5001/post
+      use_default_credentials: true
+      headers:
+          CodeNT: '{{System.CodeNT}}'
+          Accept: 'application/json'
+      #string_content: string
+      content:
+         json_content: |
+            { }
+      check_response:
+        throw_exception_if_body_not_contains_all:
+            - '"CodRetour":0' # Code de retour ou un mot retourné par votre api afin de valider que tout est concluant
+
       # HTTP Basic authentication
       #auth_basic: 'the-username:the-password'
       # HTTP Bearer authentication (also called token authentication)

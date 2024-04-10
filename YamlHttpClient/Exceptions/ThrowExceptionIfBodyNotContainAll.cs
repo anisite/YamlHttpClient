@@ -4,7 +4,7 @@ using System.Runtime.Serialization;
 namespace YamlHttpClient.Exceptions
 {
     [Serializable]
-    internal class ThrowExceptionIfBodyNotContainAll : Exception
+    public class ThrowExceptionIfBodyNotContainAll : Exception
     {
         public ThrowExceptionIfBodyNotContainAll()
         {
