@@ -11,6 +11,8 @@ using System.Drawing;
 using System.IO;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
+using System.Text;
+
 #if NET6_0_OR_GREATER
 using RestMockCore;
 #endif
@@ -67,8 +69,10 @@ namespace YamlHttpClient.Tests
 
             using HttpServer mockServer = new HttpServer(5001);
 
+            var responseSrv = "{ \"result\": \"dump\"}";
+
             mockServer.Config.Post("/post")
-                             .Send("{ \"result\": \"dump\"}")
+                             .Send(responseSrv)
                              .Verifiable();
             mockServer.Run();
 
@@ -80,7 +84,7 @@ namespace YamlHttpClient.Tests
                 date = new DateTime(2000, 1, 1),
                 date2 = new DateTime(2000, 1, 1, 2, 2, 2),
                 obj = new[] { new { test = 1 }, new { test = 2 } },
-                val1 = new Dictionary<string, object>() { { "testkey", "testval" } },
+                val1 = new Dictionary<string, object>() { { "testkey", "testéval" } },
                 place = "yty",
                 System = new { CodeNT = @"mes\cotda05" }
             };
@@ -98,6 +102,76 @@ namespace YamlHttpClient.Tests
             await httpClient.CheckResponseAsync(response);
 
             var data = await response.Content.ReadAsStringAsync();
+
+            Assert.AreEqual("{\n    \"val1\": \"[testkey, test&#233;val]\", \n    \"all\": {\"table_0\":\"v1\",\"table_1\":\"v2\",\"date\":\"2000-01-01\",\"date2\":\"2000-01-01 02:02:02\",\"obj_0_test\":\"1\",\"obj_1_test\":\"2\",\"val1_testkey\":\"testéval\",\"place\":\"yty\",\"System_CodeNT\":\"mes\\\\cotda05\"}\n    \"all2\": {\"table\":[\"v1\",\"v2\"],\"date\":\"2000-01-01T00:00:00\",\"date2\":\"2000-01-01T02:02:02\",\"obj\":[{\"test\":1},{\"test\":2}],\"val1\":{\"testkey\":\"testéval\"},\"place\":\"yty\",\"System\":{\"CodeNT\":\"mes\\\\cotda05\"}}\n}\n", readContent);
+            Assert.AreEqual(responseSrv, data);
+        }
+
+        [TestMethod()]
+        public async Task YamlHttpClientHandlerCharsetTest()
+        {
+            var yamlFile = @"../../../test1.yml";
+
+            var str = System.IO.File.ReadAllText(yamlFile);
+
+            using HttpServer mockServer = new HttpServer(5001);
+
+            var responseSrv = "{ \"result\": \"dump\"}";
+
+            mockServer.Config.Post("/post")
+                             .Send(responseSrv)
+                             .Verifiable();
+            mockServer.Run();
+
+            var cfg = new YamlHttpClientConfigBuilder().LoadFromString(str, "myHttpCall");
+
+            cfg.Content.Encoding = "iso-8859-1";
+
+            YamlHttpClientFactory httpClient = new YamlHttpClientFactory(cfg);
+
+            var testObject = new
+            {
+                table = new[] { "v1", "v2" },
+                date = new DateTime(2000, 1, 1),
+                date2 = new DateTime(2000, 1, 1, 2, 2, 2),
+                obj = new[] { new { test = 1 }, new { test = 2 } },
+                val1 = new Dictionary<string, object>() { { "testkey", "testéval" } },
+                place = "yty",
+                System = new { CodeNT = @"mes\cotda05" }
+            };
+
+            // Build message
+            var request = httpClient.BuildRequestMessage(testObject);
+
+            // Inspect content if needed
+            var readContent = await request.Content.ReadAsStringAsync();
+
+            // Send it
+            var response = await httpClient.SendAsync(request);
+
+            //Do something with response
+            await httpClient.CheckResponseAsync(response);
+
+            var data = await response.Content.ReadAsStringAsync();
+
+            Assert.AreEqual("{\n    \"val1\": \"[testkey, test&#233;val]\", \n    \"all\": {\"table_0\":\"v1\",\"table_1\":\"v2\",\"date\":\"2000-01-01\",\"date2\":\"2000-01-01 02:02:02\",\"obj_0_test\":\"1\",\"obj_1_test\":\"2\",\"val1_testkey\":\"testéval\",\"place\":\"yty\",\"System_CodeNT\":\"mes\\\\cotda05\"}\n    \"all2\": {\"table\":[\"v1\",\"v2\"],\"date\":\"2000-01-01T00:00:00\",\"date2\":\"2000-01-01T02:02:02\",\"obj\":[{\"test\":1},{\"test\":2}],\"val1\":{\"testkey\":\"testéval\"},\"place\":\"yty\",\"System\":{\"CodeNT\":\"mes\\\\cotda05\"}}\n}\n", readContent);
+            Assert.AreEqual(responseSrv, data);
+        }
+
+        public static string fnStringConverterCodepage(string sText, string sCodepageIn = "ISO-8859-1", string sCodepageOut = "UTF-8")
+        {
+            string sResultado = string.Empty;
+            try
+            {
+                byte[] tempBytes;
+                tempBytes = System.Text.Encoding.GetEncoding(sCodepageIn).GetBytes(sText);
+                sResultado = System.Text.Encoding.GetEncoding(sCodepageOut).GetString(tempBytes);
+            }
+            catch (Exception)
+            {
+                sResultado = "";
+            }
+            return sResultado;
         }
 #endif
 
