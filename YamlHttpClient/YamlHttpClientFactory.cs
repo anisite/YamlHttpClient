@@ -149,8 +149,16 @@ namespace YamlHttpClient
         /// <returns></returns>
         public virtual Task<HttpResponseMessage> SendAsync(HttpRequestMessage httpRequestMessage)
         {
-            var client = GetHttpClient();
-            return client.SendAsync(httpRequestMessage);
+            try
+            {
+                var client = GetHttpClient();
+
+                return client.SendAsync(httpRequestMessage);
+            }
+            catch(UriFormatException ex)
+            {
+                throw new Exception($"Invalid URI : '{httpRequestMessage.RequestUri}'", ex);
+            }
         }
 
         /// <summary>
