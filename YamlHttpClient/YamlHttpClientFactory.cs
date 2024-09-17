@@ -120,26 +120,35 @@ namespace YamlHttpClient
         /// <returns></returns>
         public HttpRequestMessage BuildRequestMessage(dynamic data)
         {
-            var msg = new HttpRequestMessage(new HttpMethod(HttpClientSettings.Method),
+            try
+            {
+                var msg = new HttpRequestMessage(new HttpMethod(HttpClientSettings.Method),
                                                             SS(HttpClientSettings.Url, data));
 
-            msg.Content = (_contentHandler ?? new ContentHandler(HandlebarsProvider)).Content(data, HttpClientSettings.Content);
+                msg.Content = (_contentHandler ?? new ContentHandler(HandlebarsProvider)).Content(data, HttpClientSettings.Content);
 
-            // Check If Basic authentication 
-            if (HttpClientSettings.AuthBasic is { })
-            {
-                var basicAuth = Encoding.ASCII.GetBytes(HttpClientSettings.AuthBasic);
-                msg.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Basic", Convert.ToBase64String(basicAuth));
-            }
-
-            // Adding all headers
-            if (HttpClientSettings.Headers is { })
-                foreach (var item in HttpClientSettings.Headers)
+                // Check If Basic authentication 
+                if (HttpClientSettings.AuthBasic is { })
                 {
-                    msg.Headers.TryAddWithoutValidation(item.Key, SS(item.Value, data));
+                    var basicAuth = Encoding.ASCII.GetBytes(HttpClientSettings.AuthBasic);
+                    msg.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Basic", Convert.ToBase64String(basicAuth));
                 }
 
-            return msg;
+                // Adding all headers
+                if (HttpClientSettings.Headers is { })
+                {
+                    foreach (var item in HttpClientSettings.Headers)
+                    {
+                        msg.Headers.TryAddWithoutValidation(item.Key, SS(item.Value, data));
+                    }
+                }
+
+                return msg;
+            }
+            catch (UriFormatException ex)
+            {
+                throw new Exception($"Invalid URI : '{SS(HttpClientSettings.Url, data)}'", ex);
+            }
         }
 
         /// <summary>
@@ -149,16 +158,9 @@ namespace YamlHttpClient
         /// <returns></returns>
         public virtual Task<HttpResponseMessage> SendAsync(HttpRequestMessage httpRequestMessage)
         {
-            try
-            {
-                var client = GetHttpClient();
+            var client = GetHttpClient();
 
-                return client.SendAsync(httpRequestMessage);
-            }
-            catch(UriFormatException ex)
-            {
-                throw new Exception($"Invalid URI : '{httpRequestMessage.RequestUri}'", ex);
-            }
+            return client.SendAsync(httpRequestMessage);
         }
 
         /// <summary>
