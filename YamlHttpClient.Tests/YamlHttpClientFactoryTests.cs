@@ -201,7 +201,7 @@ namespace YamlHttpClient.Tests
         }
 
         [TestMethod()]
-        [ExpectedException(typeof(Exception), "The URI should be invalid.")]
+        [ExpectedException(typeof(YamlHttpClientException), "The URI should be invalid.")]
         public async Task YamlHttpClientHandlerInvalidUriTest()
         {
             var mock = new Mock<YamlHttpClientFactory>();

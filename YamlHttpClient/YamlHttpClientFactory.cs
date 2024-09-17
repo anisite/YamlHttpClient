@@ -147,7 +147,7 @@ namespace YamlHttpClient
             }
             catch (UriFormatException ex)
             {
-                throw new Exception($"Invalid URI : '{SS(HttpClientSettings.Url, data)}'", ex);
+                throw new YamlHttpClientException($"Invalid URI : '{SS(HttpClientSettings.Url, data)}'", ex);
             }
         }
 
