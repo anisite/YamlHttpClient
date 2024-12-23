@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<TargetFrameworks>netcoreapp3.1;net5.0;net6.0;net7.0</TargetFrameworks>
+		<TargetFrameworks>netcoreapp3.1;net5.0;net6.0;net7.0;net8.0</TargetFrameworks>
 		<Nullable>enable</Nullable>
 		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
 		<PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
@@ -10,7 +10,7 @@
 		<PackageProjectUrl>https://github.com/anisite/YamlHttpClient</PackageProjectUrl>
 		<RepositoryUrl>https://github.com/anisite/YamlHttpClient</RepositoryUrl>
 		<PackageLicenseFile>LICENSE</PackageLicenseFile>
-		<Version>1.0.6</Version>
+		<Version>1.0.7</Version>
 		<Description>Yaml config based .net HttpClient</Description>
 	</PropertyGroup>
 
@@ -31,6 +31,7 @@
 		<PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
 		<PackageReference Include="System.Collections" Version="4.3.0" />
 		<PackageReference Include="System.Drawing.Common" Version="5.0.3" />
+		<PackageReference Include="System.Text.Encodings.Web" Version="4.5.1" />
 		<PackageReference Include="YamlDotNet" Version="11.2.1" />
 	</ItemGroup>
 

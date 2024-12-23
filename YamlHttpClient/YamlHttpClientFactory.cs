@@ -11,6 +11,7 @@ using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Security.Cryptography;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using YamlDotNet.Serialization;
 using YamlDotNet.Serialization.NamingConventions;
@@ -160,7 +161,20 @@ namespace YamlHttpClient
         {
             var client = GetHttpClient();
 
-            return client.SendAsync(httpRequestMessage);
+            return client.SendAsync(httpRequestMessage, CancellationToken.None);
+        }
+
+        /// <summary>
+        /// Send http request to server with parameters from config
+        /// </summary>
+        /// <param name="httpRequestMessage"></param>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
+        public virtual Task<HttpResponseMessage> SendAsync(HttpRequestMessage httpRequestMessage, CancellationToken cancellationToken)
+        {
+            var client = GetHttpClient();
+
+            return client.SendAsync(httpRequestMessage, cancellationToken);
         }
 
         /// <summary>
@@ -171,24 +185,55 @@ namespace YamlHttpClient
         public Task<HttpResponseMessage> AutoCallAsync(dynamic data)
         {
             var msg = BuildRequestMessage(data);
-            return SendAsync(msg);
+            return SendAsync(msg, CancellationToken.None);
         }
+
+        /// <summary>
+        /// Auto call a web url with settings from config and any data to work with.
+        /// </summary>
+        /// <param name="data"></param>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
+        public Task<HttpResponseMessage> AutoCallAsync(dynamic data, CancellationToken cancellationToken)
+        {
+            var msg = BuildRequestMessage(data);
+            return SendAsync(msg, cancellationToken);
+        }
+
 
         /// <summary>
         /// Check response from check_response settings in yaml config
         /// </summary>
         /// <param name="response"></param>
         /// <returns></returns>
-        public async Task CheckResponseAsync(HttpResponseMessage response)
+        public Task CheckResponseAsync(HttpResponseMessage response)
+        {
+            return CheckResponseAsync(response, CancellationToken.None);
+        }
+
+        /// <summary>
+        /// Check response from check_response settings in yaml config
+        /// </summary>
+        /// <param name="response"></param>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
+        public async Task CheckResponseAsync(HttpResponseMessage response, CancellationToken cancellationToken)
         {
             if (HttpClientSettings.CheckResponse?.ThrowExceptionIfBodyContainsAny?.Any() ?? false)
             {
                 foreach (var item in HttpClientSettings.CheckResponse.ThrowExceptionIfBodyContainsAny)
                 {
+#if NETCOREAPP3_1
                     if ((await response.Content.ReadAsStringAsync()).Contains(item))
                     {
                         throw new ThrowExceptionIfBodyContainsAny(item);
                     }
+#else
+              if ((await response.Content.ReadAsStringAsync(cancellationToken)).Contains(item))
+                    {
+                        throw new ThrowExceptionIfBodyContainsAny(item);
+                    }
+#endif
                 }
             }
 

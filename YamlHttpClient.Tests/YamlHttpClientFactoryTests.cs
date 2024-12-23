@@ -10,6 +10,8 @@ using System.IO;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
 using YamlHttpClient.Exceptions;
+using System.Threading;
+
 
 
 #if NET6_0_OR_GREATER
@@ -40,7 +42,7 @@ namespace YamlHttpClient.Tests
 
             mock.CallBase = true;
 
-            mock.Setup(e => e.SendAsync(It.IsAny<HttpRequestMessage>())).ReturnsAsync(new HttpResponseMessage { Content = new StringContent("test") });
+            mock.Setup(e => e.SendAsync(It.IsAny<HttpRequestMessage>(), It.IsAny<CancellationToken>())).ReturnsAsync(new HttpResponseMessage { Content = new StringContent("test") });
 
             var services = new ServiceCollection();
             services.AddTransient<IYamlHttpClientAccessor>(e => { return mock.Object; });
@@ -53,7 +55,7 @@ namespace YamlHttpClient.Tests
 
             var demo = restService.BuildRequestMessage(new { test = "empty" });
 
-            var test = await restService.SendAsync(demo);
+            var test = await restService.SendAsync(demo, CancellationToken.None);
 
             Assert.AreEqual("test", await test.Content.ReadAsStringAsync());
         }
@@ -208,7 +210,7 @@ namespace YamlHttpClient.Tests
 
             mock.CallBase = true;
 
-            mock.Setup(e => e.SendAsync(It.IsAny<HttpRequestMessage>())).ReturnsAsync(new HttpResponseMessage { Content = new StringContent("test") });
+            mock.Setup(e => e.SendAsync(It.IsAny<HttpRequestMessage>(), It.IsAny<CancellationToken>())).ReturnsAsync(new HttpResponseMessage { Content = new StringContent("test") });
 
             var services = new ServiceCollection();
             services.AddTransient<IYamlHttpClientAccessor>(e => { return mock.Object; });
