@@ -1,20 +1,11 @@
 ﻿using HandlebarsDotNet;
-using HandlebarsDotNet.IO;
-using Newtonsoft.Json;
 using System;
-using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
-using System.Numerics;
-using System.Runtime.CompilerServices;
-using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using YamlDotNet.Serialization;
-using YamlDotNet.Serialization.NamingConventions;
 using YamlHttpClient.Exceptions;
 using YamlHttpClient.Factory;
 using YamlHttpClient.Interfaces;
@@ -159,9 +150,7 @@ namespace YamlHttpClient
         /// <returns></returns>
         public virtual Task<HttpResponseMessage> SendAsync(HttpRequestMessage httpRequestMessage)
         {
-            var client = GetHttpClient();
-
-            return client.SendAsync(httpRequestMessage, CancellationToken.None);
+            return SendAsyncCore(httpRequestMessage, CancellationToken.None);
         }
 
         /// <summary>
@@ -172,9 +161,21 @@ namespace YamlHttpClient
         /// <returns></returns>
         public virtual Task<HttpResponseMessage> SendAsync(HttpRequestMessage httpRequestMessage, CancellationToken cancellationToken)
         {
+            return SendAsyncCore(httpRequestMessage, cancellationToken);
+        }
+
+        private Task<HttpResponseMessage> SendAsyncCore(HttpRequestMessage httpRequestMessage, CancellationToken cancellationToken)
+        {
             var client = GetHttpClient();
 
-            return client.SendAsync(httpRequestMessage, cancellationToken);
+            try
+            {
+                return client.SendAsync(httpRequestMessage, cancellationToken);
+            }
+            catch (InvalidOperationException ex)
+            {
+                throw new YamlHttpClientException($"Invalid URI : '{SS(HttpClientSettings.Url, httpRequestMessage.RequestUri)}'", ex);
+            }
         }
 
         /// <summary>

@@ -224,6 +224,28 @@ namespace YamlHttpClient.Tests
             var demo = restService.BuildRequestMessage(new { test = "empty" });
         }
 
+        [TestMethod()]
+        [ExpectedException(typeof(YamlHttpClientException), "The URI should be invalid.")]
+        public async Task YamlHttpClientHandlerInvalidInternalUriSendAsyncTest()
+        {
+            var mock = new Mock<YamlHttpClientFactory>();
+            mock.CallBase = true;
+
+            mock.Setup(e => e.SendAsync(It.IsAny<HttpRequestMessage>(), It.IsAny<CancellationToken>())).ReturnsAsync(new HttpResponseMessage { Content = new StringContent("test") });
+
+            var services = new ServiceCollection();
+            services.AddTransient<IYamlHttpClientAccessor>(e => { return mock.Object; });
+
+            var provider = services.BuildServiceProvider();
+            var restService = provider.GetRequiredService<IYamlHttpClientAccessor>();
+
+            restService.HttpClientSettings = new HttpClientSettings { Method = "POST", Url = "/invalidUri", Content = new ContentSettings { JsonContent = "{}" } };
+            restService.HandlebarsProvider = YamlHttpClientFactory.CreateDefaultHandleBars();
+
+            var demo = restService.BuildRequestMessage(new { test = "empty" });
+            await mock.Object.SendAsync(demo);
+        }
+
         public static string fnStringConverterCodepage(string sText, string sCodepageIn = "ISO-8859-1", string sCodepageOut = "UTF-8")
         {
             string sResultado = string.Empty;
