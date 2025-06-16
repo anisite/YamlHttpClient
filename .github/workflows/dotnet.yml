@@ -12,10 +12,11 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Install libssl1.1 manually
+    - name: Download and install libssl1.1
       run: |
-        wget http://security.ubuntu.com/ubuntu/pool/main/o/openssl1.1/libssl1.1_1.1.1f-1ubuntu2.22_amd64.deb
-        sudo dpkg -i libssl1.1_1.1.1f-1ubuntu2.22_amd64.deb || true
+        wget http://archive.ubuntu.com/ubuntu/pool/main/o/openssl/libssl1.1_1.1.0g-2ubuntu4_amd64.deb
+        sudo apt-get update
+        sudo apt-get install -y ./libssl1.1_1.1.0g-2ubuntu4_amd64.deb
     - uses: actions/checkout@v2
     - name: Setup .NET 3.1
       uses: actions/setup-dotnet@v1
