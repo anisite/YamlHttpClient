@@ -1,9 +1,11 @@
 ﻿using HandlebarsDotNet;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Text;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using YamlHttpClient.Exceptions;
@@ -17,7 +19,7 @@ namespace YamlHttpClient
     /// <summary>
     /// Yaml config based HttpClient
     /// </summary>
-    public class YamlHttpClientFactory : YamlHttpClientFactoryBase, IYamlHttpClientAccessor
+    public class YamlHttpClientSetFactory
     {
         private string _uniqueId => HttpClientSettings.Url;
         private readonly IContentHandler _contentHandler;
@@ -32,7 +34,7 @@ namespace YamlHttpClient
         /// </summary>
         public IHandlebars HandlebarsProvider { get; set; }
 
-        public YamlHttpClientFactory()
+        public YamlHttpClientSetFactory()
         {
             HandlebarsProvider = CreateDefaultHandleBars();
         }
@@ -40,7 +42,7 @@ namespace YamlHttpClient
         /// <summary>
         /// 
         /// </summary>
-        public YamlHttpClientFactory(HttpClientSettings httpClientSettings, IHandlebars? handlebars = null)
+        public YamlHttpClientSetFactory(HttpClientSettings httpClientSettings, IHandlebars? handlebars = null)
         {
             HttpClientSettings = httpClientSettings;
             HandlebarsProvider = handlebars ?? CreateDefaultHandleBars();
@@ -48,14 +50,14 @@ namespace YamlHttpClient
         }
 
         /// <summary>
-        /// Create a new instance of YamlHttpClientFactory
+        /// Create a new instance of YamlHttpClientSetFactory
         /// </summary>
         /// <param name="httpClientSettings"></param>
         /// <param name="handlebars"></param>
         /// <param name="defaultClientTimeout"></param>
-        public YamlHttpClientFactory(HttpClientSettings httpClientSettings,
+        public YamlHttpClientSetFactory(HttpClientSettings httpClientSettings,
                                      TimeSpan defaultClientTimeout, 
-                                     IHandlebars? handlebars = null) : base(defaultClientTimeout)
+                                     IHandlebars? handlebars = null)
         {
             HttpClientSettings = httpClientSettings;
             HandlebarsProvider = handlebars ?? CreateDefaultHandleBars();
@@ -87,31 +89,15 @@ namespace YamlHttpClient
         }
 
         /// <summary>
-        /// Cache key
-        /// </summary>
-        /// <returns></returns>
-        protected override string GetCacheKey()
-        {
-            return _uniqueId;
-        }
-
-        /// <summary>
-        /// Create
-        /// </summary>
-        /// <param name="url"></param>
-        /// <returns></returns>
-        protected override IYamlHttpClient Create(string? url)
-        {
-            return new YamlSafeHttpClient(this, url);
-        }
-
-        /// <summary>
         /// Build request message
         /// </summary>
         /// <param name="data"></param>
         /// <returns></returns>
         public HttpRequestMessage BuildRequestMessage(dynamic data)
         {
+            var jsonString = JsonSerializer.Serialize(data);
+            var contextData = JsonSerializer.Deserialize<Dictionary<string, object>>(jsonString);
+
             try
             {
                 var msg = new HttpRequestMessage(new HttpMethod(HttpClientSettings.Method),
