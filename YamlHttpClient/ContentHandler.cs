@@ -45,8 +45,11 @@ namespace YamlHttpClient
         /// <param name="data"></param>
         /// <param name="contentSettings"></param>
         /// <returns></returns>
-        public HttpContent? Content(dynamic data, ContentSettings contentSettings)
+        public HttpContent? Content(dynamic data, ContentSettings? contentSettings)
         {
+            if (contentSettings is null)
+                return null;
+
             // String Content
             if (contentSettings.StringContent is { })
             {
@@ -111,7 +114,7 @@ namespace YamlHttpClient
         /// <returns></returns>
         public string ParseContent(string? contentTemplate, dynamic data)
         {
-            var template = _handlebars.Compile(contentTemplate ?? string.Empty);
+            var template = _handlebars.CompileWithCache(contentTemplate);
             var result = template(data);
             return result;
         }

@@ -96,16 +96,6 @@ namespace YamlHttpClient
         }
 
         /// <summary>
-        /// Create
-        /// </summary>
-        /// <param name="url"></param>
-        /// <returns></returns>
-        protected override IYamlHttpClient Create(string? url)
-        {
-            return new YamlSafeHttpClient(this, url);
-        }
-
-        /// <summary>
         /// Build request message
         /// </summary>
         /// <param name="data"></param>
@@ -220,35 +210,41 @@ namespace YamlHttpClient
         /// <returns></returns>
         public async Task CheckResponseAsync(HttpResponseMessage response, CancellationToken cancellationToken)
         {
-            if (HttpClientSettings.CheckResponse?.ThrowExceptionIfBodyContainsAny?.Any() ?? false)
-            {
-                foreach (var item in HttpClientSettings.CheckResponse.ThrowExceptionIfBodyContainsAny)
-                {
+            var checkSettings = HttpClientSettings.CheckResponse;
+
+            if (checkSettings == null) return;
+
+            bool hasContainsAny = checkSettings.ThrowExceptionIfBodyContainsAny?.Any() == true;
+            bool hasNotContainsAll = checkSettings.ThrowExceptionIfBodyNotContainAll?.Any() == true;
+
+            if (!hasContainsAny && !hasNotContainsAll) return;
+
 #if NETCOREAPP3_1
-                    if ((await response.Content.ReadAsStringAsync()).Contains(item))
-                    {
-                        throw new ThrowExceptionIfBodyContainsAny(item);
-                    }
+            string body = await response.Content.ReadAsStringAsync();
 #else
-              if ((await response.Content.ReadAsStringAsync(cancellationToken)).Contains(item))
+            string body = await response.Content.ReadAsStringAsync(cancellationToken);
+#endif
+            if (hasContainsAny)
+            {
+                foreach (var item in checkSettings.ThrowExceptionIfBodyContainsAny!)
+                {
+                    if (body.Contains(item, StringComparison.Ordinal))
                     {
                         throw new ThrowExceptionIfBodyContainsAny(item);
                     }
-#endif
                 }
             }
 
-            if (HttpClientSettings.CheckResponse?.ThrowExceptionIfBodyNotContainAll?.Any() ?? false)
+            if (hasNotContainsAll)
             {
-                foreach (var item in HttpClientSettings.CheckResponse.ThrowExceptionIfBodyNotContainAll)
+                foreach (var item in checkSettings.ThrowExceptionIfBodyNotContainAll!)
                 {
-                    if (!(await response.Content.ReadAsStringAsync()).Contains(item))
+                    if (!body.Contains(item, StringComparison.Ordinal))
                     {
                         throw new ThrowExceptionIfBodyNotContainAll(item);
                     }
                 }
             }
-
         }
 
         /// <summary>
@@ -258,20 +254,27 @@ namespace YamlHttpClient
         /// <returns></returns>
         protected override HttpMessageHandler CreateMessageHandler(string? proxyUrl = null)
         {
-            var handler = new HttpClientHandler();
+            var handler = new SocketsHttpHandler
+            {
+                PooledConnectionLifetime = TimeSpan.FromMinutes(15),
+                AllowAutoRedirect = true
+            };
+
+            if (HttpClientSettings.UseDefaultCredentials)
+            {
+                handler.Credentials = System.Net.CredentialCache.DefaultCredentials;
+            }
 
             if (!string.IsNullOrEmpty(proxyUrl))
             {
-                handler = new HttpClientHandler
-                {
-                    UseProxy = true,
-                    Proxy = new WebProxy(proxyUrl),
-                    //AutomaticDecompression = DecompressionMethods.None
-                };
-            }
+                handler.UseProxy = true;
+                handler.Proxy = new WebProxy(proxyUrl);
 
-            handler.UseDefaultCredentials = HttpClientSettings.UseDefaultCredentials;
-            handler.AllowAutoRedirect = true;
+                if (HttpClientSettings.UseDefaultCredentials)
+                {
+                    handler.DefaultProxyCredentials = System.Net.CredentialCache.DefaultCredentials;
+                }
+            }
 
             return handler;
         }
@@ -284,7 +287,7 @@ namespace YamlHttpClient
         /// <returns></returns>
         private string SS(string value, object data)
         {
-            var comp = HandlebarsProvider.Compile(value);
+            var comp = HandlebarsProvider.CompileWithCache(value);
             return comp(data);
         }
     }

@@ -2,31 +2,24 @@
 using System.Collections.Concurrent;
 using System.Net;
 using System.Net.Http;
-using System.Threading.Tasks;
-using YamlHttpClient;
-using YamlHttpClient.Interfaces;
 
 namespace YamlHttpClient.Factory
 {
     /// <summary>
     /// Base class of factory
     /// </summary>
-    public abstract class YamlHttpClientFactoryBase : IYamlHttpClientFactory
+    public abstract class YamlHttpClientFactoryBase
     {
-        private readonly ConcurrentDictionary<string, IYamlHttpClient> _clients = new ConcurrentDictionary<string, IYamlHttpClient>();
-        public TimeSpan DefaultClientTimeout { get; set; } = TimeSpan.FromSeconds(100);// same as HttpClient default value
+        // 🚀 OPTIMISATION MAJEURE : STATIC ConcurrentDictionary. 
+        // Les clients HTTP survivront à travers toutes les instances de tes Factory !
+        private static readonly ConcurrentDictionary<string, HttpClient> _clients = new ConcurrentDictionary<string, HttpClient>();
 
-        /// <summary>
-        /// Ctor of base class
-        /// </summary>
+        public TimeSpan DefaultClientTimeout { get; set; } = TimeSpan.FromSeconds(100);
+
         protected YamlHttpClientFactoryBase()
         {
         }
 
-        /// <summary>
-        /// Ctor of base class
-        /// </summary>
-        /// <param name="defaultClientTimeout">Delay before timeout</param>
         protected YamlHttpClientFactoryBase(TimeSpan defaultClientTimeout)
         {
             DefaultClientTimeout = defaultClientTimeout;
@@ -35,54 +28,37 @@ namespace YamlHttpClient.Factory
         /// <summary>
         /// Get http client from cache or instanciate another.
         /// </summary>
-        /// <param name="url"></param>
-        /// <returns></returns>
         public virtual HttpClient GetHttpClient(string? url = null)
         {
-            var safeClient = _clients.AddOrUpdate(
-                 GetCacheKey(),
-                 Create(url),
-                 (u, client) => client.IsDisposed ? Create(url) : client);
-
-            return safeClient.HttpClient;
+            // On utilise GetOrAdd. Le client créé vivra éternellement, 
+            // mais ses connexions internes seront recyclées par le SocketsHttpHandler.
+            return _clients.GetOrAdd(GetCacheKey(), _ =>
+            {
+                var handler = CreateMessageHandlerInternal(null);
+                return CreateHttpClientInternal(handler);
+            });
         }
 
         /// <summary>
         /// Get http client from cache or instanciate another.
         /// </summary>
-        /// <param name="proxyUrl">Specify proxy url to use.</param>
-        /// <returns></returns>
         public virtual HttpClient GetProxiedHttpClient(string proxyUrl)
         {
             if (string.IsNullOrEmpty(proxyUrl))
                 throw new ArgumentNullException(nameof(proxyUrl));
 
-            var safeClient = _clients.AddOrUpdate(
-                proxyUrl,
-                CreateProxied,
-                (u, client) => client.IsDisposed ? CreateProxied(u) : client);
+            // On crée une clé unique pour le proxy
+            string cacheKey = $"{GetCacheKey()}_proxy_{proxyUrl}";
 
-            return safeClient.HttpClient;
-        }
-
-        /// <summary />
-        public void Dispose()
-        {
-            foreach (var kv in _clients)
+            return _clients.GetOrAdd(cacheKey, _ =>
             {
-                if (!kv.Value.IsDisposed)
-                    kv.Value.Dispose();
-            }
-            _clients.Clear();
+                var handler = CreateMessageHandlerInternal(proxyUrl);
+                return CreateHttpClientInternal(handler);
+            });
         }
 
         /// <summary />
         protected abstract string GetCacheKey();
-        /// <summary />
-        protected virtual IYamlHttpClient Create(string? url) => new YamlSafeHttpClient(this, url);
-        /// <summary />
-        protected virtual IYamlHttpClient CreateProxied(string proxyUrl) => new YamlSafeHttpClient(this, proxyUrl, true);
-
 
         internal HttpClient CreateHttpClientInternal(HttpMessageHandler handler)
         {
@@ -106,20 +82,26 @@ namespace YamlHttpClient.Factory
         /// <summary />
         protected virtual HttpMessageHandler CreateMessageHandler(string? proxyUrl = null)
         {
-            if (!string.IsNullOrEmpty(proxyUrl))
+            // 🚀 LA MAGIE OPÈRE ICI : SocketsHttpHandler au lieu de HttpClientHandler
+            var handler = new SocketsHttpHandler
             {
-                return new HttpClientHandler
-                {
-                    UseProxy = true,
-                    Proxy = new WebProxy(proxyUrl),
-                    AutomaticDecompression = DecompressionMethods.None
-                };
-            }
-            return new HttpClientHandler
-            {
-                UseProxy = false,
+                // Ferme silencieusement les connexions inactives après 15 minutes pour rafraîchir les DNS
+                // sans briser les requêtes en cours.
+                PooledConnectionLifetime = TimeSpan.FromMinutes(15),
                 AutomaticDecompression = DecompressionMethods.None
             };
+
+            if (!string.IsNullOrEmpty(proxyUrl))
+            {
+                handler.UseProxy = true;
+                handler.Proxy = new WebProxy(proxyUrl);
+            }
+            else
+            {
+                handler.UseProxy = false;
+            }
+
+            return handler;
         }
     }
 }

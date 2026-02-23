@@ -1,6 +1,7 @@
 ﻿using HandlebarsDotNet;
 using Newtonsoft.Json;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
@@ -97,16 +98,15 @@ namespace YamlHttpClient.Utils
                 }
                 else
                 {
-                    var concatStr = string.Empty;
-
+                    var sb = new System.Text.StringBuilder();
                     foreach (var item in values)
                     {
                         if (!(item is UndefinedBindingResult))
                         {
-                            concatStr += item?.ToString();
+                            sb.Append(item?.ToString());
                         }
                     }
-                    json = JsonConvert.SerializeObject(concatStr);
+                    json = JsonConvert.SerializeObject(sb.ToString());
                 }
 
                 if (flatten)
@@ -289,6 +289,33 @@ namespace YamlHttpClient.Utils
             });
 
             return hb;
+        }
+
+        // Le dictionnaire statique vit ici. Il sera partagé par toute l'application.
+        private static readonly ConcurrentDictionary<string, HandlebarsTemplate<object, object>> _templateCache = new ConcurrentDictionary<string, HandlebarsTemplate<object, object>>();
+
+        /// <summary>
+        /// Compile un template Handlebars ou récupère sa version déjà compilée en cache.
+        /// </summary>
+        /// <param name="handlebars">L'instance IHandlebars courante</param>
+        /// <param name="template">Le template textuel brut à compiler</param>
+        /// <returns>La fonction compilée prête à recevoir des données</returns>
+        public static HandlebarsTemplate<object, object> CompileWithCache(this IHandlebars handlebars, string? template)
+        {
+            if (string.IsNullOrWhiteSpace(template))
+            {
+                return (context, data) => string.Empty;
+            }
+
+            return _templateCache.GetOrAdd(template, tpl => handlebars.Compile(tpl));
+        }
+
+        /// <summary>
+        /// Permet de vider le cache manuellement (utile pour des rechargements à chaud de configuration)
+        /// </summary>
+        public static void ClearTemplateCache()
+        {
+            _templateCache.Clear();
         }
     }
 }
