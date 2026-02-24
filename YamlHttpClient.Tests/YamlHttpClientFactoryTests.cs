@@ -158,7 +158,7 @@ namespace YamlHttpClient.Tests
 
             var str = System.IO.File.ReadAllText(yamlFile);
 
-            using HttpServer mockServer = new HttpServer(5001);
+            using HttpServer mockServer = new HttpServer(5004);
 
             var responseSrv = "{ \"result\": \"dump\"}";
 
