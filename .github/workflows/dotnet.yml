@@ -47,7 +47,7 @@ jobs:
     - name: Build
       run: dotnet build --no-restore
     - name: Test
-      run: dotnet test --no-build --verbosity normal --collect:"XPlat Code Coverage" 
+      run: dotnet test -m:1 --no-build --verbosity normal --collect:"XPlat Code Coverage" 
 
     - name: Code Coverage Report
       uses: irongut/CodeCoverageSummary@v1.3.0
