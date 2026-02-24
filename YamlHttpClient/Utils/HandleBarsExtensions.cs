@@ -67,18 +67,18 @@ namespace YamlHttpClient.Utils
                     {
                         if (forceString && !flatten)
                         {
-                            if (values[0] is { })
+                            if (values[0] is { } first)
                             {
-                                Type t = values[0].GetType();
+                                Type t = first.GetType();
                                 bool isPrimitiveType = t.IsPrimitive || t.IsValueType || (t == typeof(string));
 
                                 if (isPrimitiveType)
                                 {
-                                    json = JsonConvert.SerializeObject(values[0]?.ToString(), jsonSerializerSettings);
+                                    json = JsonConvert.SerializeObject(first.ToString(), jsonSerializerSettings);
                                 }
                                 else
                                 {
-                                    json = JsonConvert.SerializeObject(values[0], jsonSerializerSettings);
+                                    json = JsonConvert.SerializeObject(first, jsonSerializerSettings);
                                     json = JsonConvert.ToString(json);
                                 }
                             }
@@ -111,8 +111,15 @@ namespace YamlHttpClient.Utils
 
                 if (flatten)
                 {
-                    var oo = JsonHelper.DeserializeAndFlatten(json, forceString, flatten_separator, flatten_index_surrounder);
-                    json = JsonConvert.SerializeObject(oo);
+                    if (string.IsNullOrWhiteSpace(json) || json.Trim().Equals("null", StringComparison.OrdinalIgnoreCase))
+                    {
+                        json = null;
+                    }
+                    else
+                    {
+                        var oo = JsonHelper.DeserializeAndFlatten(json, forceString, flatten_separator, flatten_index_surrounder);
+                        json = JsonConvert.SerializeObject(oo);
+                    }
                 }
 
                 output.Write(json);

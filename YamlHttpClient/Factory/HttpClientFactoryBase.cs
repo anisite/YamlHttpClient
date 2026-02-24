@@ -10,8 +10,6 @@ namespace YamlHttpClient.Factory
     /// </summary>
     public abstract class YamlHttpClientFactoryBase
     {
-        // 🚀 OPTIMISATION MAJEURE : STATIC ConcurrentDictionary. 
-        // Les clients HTTP survivront à travers toutes les instances de tes Factory !
         private static readonly ConcurrentDictionary<string, HttpClient> _clients = new ConcurrentDictionary<string, HttpClient>();
 
         public TimeSpan DefaultClientTimeout { get; set; } = TimeSpan.FromSeconds(100);
@@ -82,7 +80,6 @@ namespace YamlHttpClient.Factory
         /// <summary />
         protected virtual HttpMessageHandler CreateMessageHandler(string? proxyUrl = null)
         {
-            // 🚀 LA MAGIE OPÈRE ICI : SocketsHttpHandler au lieu de HttpClientHandler
             var handler = new SocketsHttpHandler
             {
                 // Ferme silencieusement les connexions inactives après 15 minutes pour rafraîchir les DNS
