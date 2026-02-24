@@ -4,6 +4,8 @@ using System.Collections.Generic;
 using Xunit;
 using YamlHttpClient.Utils;
 
+[assembly: CollectionBehavior(DisableTestParallelization = true)]
+
 namespace YamlHttpClient.Tests
 {
 
