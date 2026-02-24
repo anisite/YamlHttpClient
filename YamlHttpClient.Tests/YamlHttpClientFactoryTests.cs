@@ -12,7 +12,7 @@ using Moq;
 using YamlHttpClient.Exceptions;
 using System.Threading;
 
-
+[assembly: CollectionBehavior(DisableTestParallelization = true)]
 
 #if NET6_0_OR_GREATER
 using RestMockCore;
@@ -68,7 +68,7 @@ namespace YamlHttpClient.Tests
 
             var str = System.IO.File.ReadAllText(yamlFile);
 
-            using HttpServer mockServer = new HttpServer(5002);
+            using HttpServer mockServer = new HttpServer(5001);
 
             var responseSrv = "{ \"result\": \"dump\"}";
 
@@ -116,7 +116,7 @@ namespace YamlHttpClient.Tests
 
             var str = System.IO.File.ReadAllText(yamlFile);
 
-            using HttpServer mockServer = new HttpServer(5003);
+            using HttpServer mockServer = new HttpServer(5001);
 
             var responseSrv = "{\r\n\"CodRetour\":1}";
 
@@ -158,7 +158,7 @@ namespace YamlHttpClient.Tests
 
             var str = System.IO.File.ReadAllText(yamlFile);
 
-            using HttpServer mockServer = new HttpServer(5004);
+            using HttpServer mockServer = new HttpServer(5001);
 
             var responseSrv = "{ \"result\": \"dump\"}";
 
