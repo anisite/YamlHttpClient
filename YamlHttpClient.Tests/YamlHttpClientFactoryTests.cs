@@ -68,7 +68,7 @@ namespace YamlHttpClient.Tests
 
             var str = System.IO.File.ReadAllText(yamlFile);
 
-            using HttpServer mockServer = new HttpServer(5001);
+            using HttpServer mockServer = new HttpServer(5002);
 
             var responseSrv = "{ \"result\": \"dump\"}";
 
@@ -116,7 +116,7 @@ namespace YamlHttpClient.Tests
 
             var str = System.IO.File.ReadAllText(yamlFile);
 
-            using HttpServer mockServer = new HttpServer(5001);
+            using HttpServer mockServer = new HttpServer(5003);
 
             var responseSrv = "{\r\n\"CodRetour\":1}";
 
