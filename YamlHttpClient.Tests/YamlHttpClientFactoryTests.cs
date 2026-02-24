@@ -12,11 +12,11 @@ using Moq;
 using YamlHttpClient.Exceptions;
 using System.Threading;
 
-[assembly: CollectionBehavior(DisableTestParallelization = true)]
-
 #if NET6_0_OR_GREATER
 using RestMockCore;
 #endif
+
+[assembly: DoNotParallelize]
 
 namespace YamlHttpClient.Tests
 {
