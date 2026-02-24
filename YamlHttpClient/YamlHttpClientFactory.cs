@@ -1,4 +1,5 @@
 ﻿using HandlebarsDotNet;
+using Microsoft.Extensions.Caching.Memory;
 using System;
 using System.Linq;
 using System.Net;
@@ -32,6 +33,17 @@ namespace YamlHttpClient
         /// </summary>
         public IHandlebars HandlebarsProvider { get; set; }
 
+        // Le cache mémoire statique partagé par toute l'application
+        private static readonly MemoryCache _httpResponseCache = new MemoryCache(new MemoryCacheOptions());
+
+        // L'objet "sûr" que l'on va stocker en RAM (sans le Stream réseau mort)
+        private class CachedResponse
+        {
+            public HttpStatusCode StatusCode { get; set; }
+            public byte[] ContentBytes { get; set; } = Array.Empty<byte>();
+            public string? ContentType { get; set; }
+        }
+
         public YamlHttpClientFactory()
         {
             HandlebarsProvider = CreateDefaultHandleBars();
@@ -62,18 +74,21 @@ namespace YamlHttpClient
             _contentHandler = new ContentHandler(HandlebarsProvider);
         }
 
+        private static readonly Lazy<IHandlebars> _defaultHandlebars = new Lazy<IHandlebars>(() =>
+        {
+            var hb = Handlebars.Create();
+            hb.AddJsonHelper();
+            hb.AddBase64();
+            hb.AddIfCond(false);
+            return hb;
+        });
+
         /// <summary>
         /// </summary>
         public static IHandlebars CreateDefaultHandleBars()
         {
-            IHandlebars hb;
-            hb = Handlebars.Create();
-
-            hb.AddJsonHelper();
-            hb.AddBase64();
-            hb.AddIfCond(false);
-
-            return hb;
+            // Retourne toujours la même instance partagée !
+            return _defaultHandlebars.Value;
         }
 
         /// <summary>
@@ -154,6 +169,129 @@ namespace YamlHttpClient
             return SendAsyncCore(httpRequestMessage, cancellationToken);
         }
 
+        /// <summary>
+        /// Send http request to server with parameters from config
+        /// </summary>
+        /// <param name="requestFactory"></param>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
+        public async Task<HttpResponseMessage> SendAsync(Func<HttpRequestMessage> requestFactory, CancellationToken cancellationToken = default)
+        {
+            var cacheSettings = HttpClientSettings.Cache;
+            string? cacheKey = null;
+
+            // ==========================================
+            // 1. VÉRIFICATION DU CACHE AVANT L'APPEL
+            // ==========================================
+            if (cacheSettings?.Enabled == true)
+            {
+                // On génère le message juste pour lire son URL et son Body compilé
+                using var msgForCache = requestFactory();
+                string url = msgForCache.RequestUri?.ToString() ?? string.Empty;
+
+                // On lit le body compilé par Handlebars
+                string bodyStr = msgForCache.Content != null ? await msgForCache.Content.ReadAsStringAsync() : string.Empty;
+
+                // Clé unique : Méthode + URL + Hash du Body. 
+                // GetHashCode() est ultra rapide et parfait pour la RAM.
+                cacheKey = $"CACHE_{HttpClientSettings.Method}_{url}_{bodyStr.GetHashCode()}";
+
+                // Si on a un "Cache Hit"
+                if (_httpResponseCache.TryGetValue(cacheKey, out CachedResponse cachedRes))
+                {
+                    // On reconstruit un HttpResponseMessage "frais" à partir des bytes en mémoire
+                    var cachedHttpResponse = new HttpResponseMessage(cachedRes.StatusCode)
+                    {
+                        Content = new ByteArrayContent(cachedRes.ContentBytes)
+                    };
+
+                    if (!string.IsNullOrEmpty(cachedRes.ContentType))
+                    {
+                        cachedHttpResponse.Content.Headers.TryAddWithoutValidation("Content-Type", cachedRes.ContentType);
+                    }
+
+                    return cachedHttpResponse; // Sortie immédiate ! Zéro appel réseau.
+                }
+            }
+
+            // ==========================================
+            // 2. LOGIQUE D'APPEL RÉSEAU (AVEC RETRY)
+            // ==========================================
+            var retrySettings = HttpClientSettings.Retry;
+            int maxAttempts = (retrySettings?.MaxRetries ?? 0) + 1;
+            int delayMs = retrySettings?.DelayMilliseconds ?? 0;
+            var codesToRetry = retrySettings?.RetryOnStatusCodes;
+
+            Exception? lastException = null;
+            HttpResponseMessage? finalResponse = null;
+
+            for (int attempt = 1; attempt <= maxAttempts; attempt++)
+            {
+                using var msg = requestFactory();
+
+                try
+                {
+                    finalResponse = await SendAsyncCore(msg, cancellationToken);
+
+                    if (attempt < maxAttempts && codesToRetry != null && codesToRetry.Contains((int)finalResponse.StatusCode))
+                    {
+                        finalResponse.Dispose();
+                        await Task.Delay(delayMs, cancellationToken);
+                        continue;
+                    }
+
+                    break; // Succès ou code d'erreur qu'on ne veut pas réessayer
+                }
+                catch (Exception ex) when (attempt < maxAttempts && IsRetryableException(ex, cancellationToken))
+                {
+                    lastException = ex;
+                    await Task.Delay(delayMs, cancellationToken);
+                }
+            }
+
+            if (finalResponse == null)
+            {
+                if (lastException != null)
+                    System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(lastException).Throw();
+                throw new InvalidOperationException("La boucle de réessai a échoué.");
+            }
+
+            // ==========================================
+            // 3. SAUVEGARDE DANS LE CACHE (SI ACTIVÉ)
+            // ==========================================
+            if (cacheSettings?.Enabled == true && finalResponse.IsSuccessStatusCode && cacheKey != null)
+            {
+                // ⚠️ ATTENTION : Lire le contenu consomme et détruit le Stream réseau !
+                byte[] bytes = await finalResponse.Content.ReadAsByteArrayAsync();
+                string? contentType = finalResponse.Content.Headers.ContentType?.ToString();
+
+                // On sauvegarde notre objet "sûr" dans la RAM
+                _httpResponseCache.Set(cacheKey, new CachedResponse
+                {
+                    StatusCode = finalResponse.StatusCode,
+                    ContentBytes = bytes,
+                    ContentType = contentType
+                }, TimeSpan.FromSeconds(cacheSettings.TtlSeconds));
+
+                // 🚀 MAGIE : On remplace le flux réseau détruit par un flux mémoire frais
+                // pour que ton `HandleAsync` ou ton utilisateur puisse quand même lire la réponse.
+                finalResponse.Content = new ByteArrayContent(bytes);
+                if (!string.IsNullOrEmpty(contentType))
+                {
+                    finalResponse.Content.Headers.TryAddWithoutValidation("Content-Type", contentType);
+                }
+            }
+
+            return finalResponse;
+        }
+
+        private static bool IsRetryableException(Exception ex, CancellationToken ct)
+        {
+            if (ex is HttpRequestException) return true;
+            if (ex is TaskCanceledException && !ct.IsCancellationRequested) return true;
+            return false;
+        }
+
         private Task<HttpResponseMessage> SendAsyncCore(HttpRequestMessage httpRequestMessage, CancellationToken cancellationToken)
         {
             var client = GetHttpClient();
@@ -175,8 +313,7 @@ namespace YamlHttpClient
         /// <returns></returns>
         public Task<HttpResponseMessage> AutoCallAsync(dynamic data)
         {
-            var msg = BuildRequestMessage(data);
-            return SendAsync(msg, CancellationToken.None);
+            return AutoCallAsync(data, CancellationToken.None);
         }
 
         /// <summary>
@@ -187,8 +324,7 @@ namespace YamlHttpClient
         /// <returns></returns>
         public Task<HttpResponseMessage> AutoCallAsync(dynamic data, CancellationToken cancellationToken)
         {
-            var msg = BuildRequestMessage(data);
-            return SendAsync(msg, cancellationToken);
+            return SendAsync(() => BuildRequestMessage(data), cancellationToken);
         }
 
 

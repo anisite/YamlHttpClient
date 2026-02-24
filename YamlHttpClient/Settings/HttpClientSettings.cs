@@ -36,6 +36,12 @@ namespace YamlHttpClient.Settings
         /// <summary />
         [YamlIgnore()]
         public string SettingKey { get; set; }
+        /// <summary />
+        [YamlMember(Alias = "retry")]
+        public RetrySettings? Retry { get; set; }
+        /// <summary />
+        [YamlMember(Alias = "cache")]
+        public CacheSettings? Cache { get; set; }
     }
 #pragma warning restore CS8618 // Le champ non-nullable n'est pas initialisé. Déclarez-le comme étant nullable.
 
