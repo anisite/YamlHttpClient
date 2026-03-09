@@ -296,6 +296,11 @@ namespace YamlHttpClient
             var chaos = HttpClientSettings.Chaos;
             if (chaos?.Enabled == true)
             {
+                // 1. Forced delay
+                if (chaos.DelayMilliseconds.HasValue)
+                {
+                    await Task.Delay(chaos.DelayMilliseconds.Value, cancellationToken);
+                }
 
 #if NET6_0_OR_GREATER
                 int chance = Random.Shared.Next(1, 101);
@@ -305,12 +310,6 @@ namespace YamlHttpClient
 
                 if (chance <= chaos.InjectionRatePercentage)
                 {
-                    // 1. Forced delay
-                    if (chaos.DelayMilliseconds.HasValue)
-                    {
-                        await Task.Delay(chaos.DelayMilliseconds.Value, cancellationToken);
-                    }
-
                     // 2. Violent network failure (Timeout, DNS lost, etc.)
                     if (chaos.SimulateNetworkException)
                     {
