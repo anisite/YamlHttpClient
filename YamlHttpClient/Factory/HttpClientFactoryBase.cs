@@ -18,6 +18,10 @@ namespace YamlHttpClient.Factory
         {
         }
 
+        /// <summary>
+        /// Ctor of base class
+        /// </summary>
+        /// <param name="defaultClientTimeout">Delay before timeout</param>
         protected YamlHttpClientFactoryBase(TimeSpan defaultClientTimeout)
         {
             DefaultClientTimeout = defaultClientTimeout;
@@ -26,6 +30,8 @@ namespace YamlHttpClient.Factory
         /// <summary>
         /// Get http client from cache or instanciate another.
         /// </summary>
+        /// <param name="url"></param>
+        /// <returns></returns>
         public virtual HttpClient GetHttpClient(string? url = null)
         {
             // On utilise GetOrAdd. Le client créé vivra éternellement, 
@@ -40,6 +46,8 @@ namespace YamlHttpClient.Factory
         /// <summary>
         /// Get http client from cache or instanciate another.
         /// </summary>
+        /// <param name="proxyUrl">Specify proxy url to use.</param>
+        /// <returns></returns>
         public virtual HttpClient GetProxiedHttpClient(string proxyUrl)
         {
             if (string.IsNullOrEmpty(proxyUrl))

@@ -9,7 +9,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using YamlHttpClient.Exceptions;
 using YamlHttpClient.Factory;
-using YamlHttpClient.Interfaces;
 using YamlHttpClient.Settings;
 using YamlHttpClient.Utils;
 
@@ -18,7 +17,7 @@ namespace YamlHttpClient
     /// <summary>
     /// Yaml config based HttpClient
     /// </summary>
-    public class YamlHttpClientFactory : YamlHttpClientFactoryBase, IYamlHttpClientAccessor
+    public partial class YamlHttpClientFactory : YamlHttpClientFactoryBase, IYamlHttpClientAccessor
     {
         private string _uniqueId => HttpClientSettings.Url;
         private readonly IContentHandler _contentHandler;
@@ -33,16 +32,13 @@ namespace YamlHttpClient
         /// </summary>
         public IHandlebars HandlebarsProvider { get; set; }
 
-        // Le cache mémoire statique partagé par toute l'application
         private static readonly MemoryCache _httpResponseCache = new MemoryCache(new MemoryCacheOptions());
 
-        // L'objet "sûr" que l'on va stocker en RAM (sans le Stream réseau mort)
-        private class CachedResponse
-        {
-            public HttpStatusCode StatusCode { get; set; }
-            public byte[] ContentBytes { get; set; } = Array.Empty<byte>();
-            public string? ContentType { get; set; }
-        }
+#if !NET6_0_OR_GREATER
+        // Générateur Thread-Safe ultra performant pour .NET 3.1 et .NET 5.0
+        private static readonly System.Threading.ThreadLocal<Random> _threadLocalRandom =
+            new System.Threading.ThreadLocal<Random>(() => new Random(Guid.NewGuid().GetHashCode()));
+#endif
 
         public YamlHttpClientFactory()
         {
@@ -66,7 +62,7 @@ namespace YamlHttpClient
         /// <param name="handlebars"></param>
         /// <param name="defaultClientTimeout"></param>
         public YamlHttpClientFactory(HttpClientSettings httpClientSettings,
-                                     TimeSpan defaultClientTimeout, 
+                                     TimeSpan defaultClientTimeout,
                                      IHandlebars? handlebars = null) : base(defaultClientTimeout)
         {
             HttpClientSettings = httpClientSettings;
@@ -292,17 +288,60 @@ namespace YamlHttpClient
             return false;
         }
 
-        private Task<HttpResponseMessage> SendAsyncCore(HttpRequestMessage httpRequestMessage, CancellationToken cancellationToken)
+        private async Task<HttpResponseMessage> SendAsyncCore(HttpRequestMessage httpRequestMessage, CancellationToken cancellationToken)
         {
+            // ==========================================
+            // 🐒 CHAOS INJECTION (Handles ALL requests, regardless of their origin)
+            // ==========================================
+            var chaos = HttpClientSettings.Chaos;
+            if (chaos?.Enabled == true)
+            {
+
+#if NET6_0_OR_GREATER
+                int chance = Random.Shared.Next(1, 101);
+#else
+                int chance = _threadLocalRandom.Value!.Next(1, 101);
+#endif
+
+                if (chance <= chaos.InjectionRatePercentage)
+                {
+                    // 1. Forced delay
+                    if (chaos.DelayMilliseconds.HasValue)
+                    {
+                        await Task.Delay(chaos.DelayMilliseconds.Value, cancellationToken);
+                    }
+
+                    // 2. Violent network failure (Timeout, DNS lost, etc.)
+                    if (chaos.SimulateNetworkException)
+                    {
+                        throw new HttpRequestException("🐒 CHAOS MONKEY: Pure network failure simulation.");
+                    }
+
+                    // 3. Bad HTTP status code (503, 500, etc.)
+                    if (chaos.SimulateStatusCode.HasValue)
+                    {
+                        return new HttpResponseMessage((System.Net.HttpStatusCode)chaos.SimulateStatusCode.Value)
+                        {
+                            RequestMessage = httpRequestMessage, // Keep the reference for debugging purposes
+                            Content = new StringContent("🐒 CHAOS MONKEY: Error response simulated by YAML configuration.")
+                        };
+                    }
+                }
+            }
+
+            // ==========================================
+            // NORMAL CALL (If the monkey hasn't struck)
+            // ==========================================
             var client = GetHttpClient();
 
             try
             {
-                return client.SendAsync(httpRequestMessage, cancellationToken);
+                return await client.SendAsync(httpRequestMessage, cancellationToken);
             }
             catch (InvalidOperationException ex)
             {
-                throw new YamlHttpClientException($"Invalid URI : '{SS(HttpClientSettings.Url, httpRequestMessage.RequestUri)}'", ex);
+                // Existing URI exception handling
+                throw new YamlHttpClientException($"Invalid URI: '{SS(HttpClientSettings.Url, httpRequestMessage.RequestUri)}'", ex);
             }
         }
 

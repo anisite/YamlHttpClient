@@ -75,6 +75,27 @@ namespace YamlHttpClient.Tests
         }
 
         [Theory]
+        [InlineData("{{#ifCond contact 'contains' 'Telephone'}}oui{{else}}non{{/ifCond}}", @"oui")]
+        [InlineData("{{#ifCond contact 'in' 'Telephone'}}oui{{else}}non{{/ifCond}}", @"oui")]
+        [InlineData("{{#ifCond contact 'in' 'Cellulaire'}}oui{{else}}non{{/ifCond}}", @"non")]
+        public void IfCond_Array_HandleBars_Formatters(string input, string expected)
+        {
+            var testObject = new
+            {
+                contact = new object[] { "Telephone", "Fax" },
+            };
+
+            var result = new ContentHandler(YamlHttpClientFactory
+                .CreateEmptyHandleBars()
+                .AddJsonHelper(new Newtonsoft.Json.JsonSerializerSettings() { DateFormatString = "yyyy-MM-dd", })
+                .AddIfCond(true)
+                .AddBase64())
+                .ParseContent(input, testObject);
+
+            Assert.Equal(expected, result);
+        }
+
+        [Theory]
         [InlineData("{{{Json obj.0.test}}}", @"null")]
         [InlineData("{{{Json Indentite.GD_A_N_CIVQ_CORR}}}", @"null")]
         [InlineData("{{{Json Indentite2.GD_A_N_CIVQ_CORR}}}", @"null")]

@@ -1,6 +1,7 @@
 ﻿using HandlebarsDotNet;
 using Newtonsoft.Json;
 using System;
+using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Drawing;
@@ -160,6 +161,7 @@ namespace YamlHttpClient.Utils
             return hb;
         }
 
+
         public static IHandlebars AddIfCond(this IHandlebars hb, bool skipNull)
         {
             hb.RegisterHelper("ifCond", (writer, options, context, args) =>
@@ -189,14 +191,46 @@ namespace YamlHttpClient.Utils
                         writer.Write("ifCond:args[2] undefined");
                     }
                     return;
-
                 }
+
+                string operateur = args[1]?.ToString() ?? "==";
+
+                // Array handling for "contains" and "in"
+                if (args[0] is IEnumerable collection && args[0].GetType().Name != "String")
+                {
+                    if (operateur == "contains" || operateur == "in")
+                    {
+                        bool found = false;
+                        string searchVal = args[2].ToString()!;
+
+                        foreach (var item in collection)
+                        {
+                            if (item != null && item.ToString() == searchVal)
+                            {
+                                found = true;
+                                break;
+                            }
+                        }
+
+                        if (found)
+                        {
+                            options.Template(writer, context);
+                        }
+                        else
+                        {
+                            options.Inverse(writer, context);
+                        }
+
+                        return;
+                    }
+                }
+
                 if (args[0].GetType().Name == "String" || args[0].GetType().Name == "Char")
                 {
                     var val1 = args[0].ToString();
                     var val2 = args[2].ToString();
 
-                    switch (args[1].ToString())
+                    switch (operateur)
                     {
                         case ">":
                             if (val1!.Length > val2!.Length)
@@ -247,7 +281,7 @@ namespace YamlHttpClient.Utils
                     object val1 = args[0];
                     object val2 = args[2];
 
-                    switch (args[1].ToString())
+                    switch (operateur)
                     {
                         case ">":
                             if (float.Parse(val1.ToString()!) > float.Parse(val2.ToString()!))

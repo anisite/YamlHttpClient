@@ -42,6 +42,9 @@ namespace YamlHttpClient.Settings
         /// <summary />
         [YamlMember(Alias = "cache")]
         public CacheSettings? Cache { get; set; }
+        /// <summary />
+        [YamlMember(Alias = "chaos")]
+        public ChaosSettings? Chaos { get; set; }
     }
 #pragma warning restore CS8618 // Le champ non-nullable n'est pas initialisé. Déclarez-le comme étant nullable.
 
