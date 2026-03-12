@@ -112,7 +112,7 @@ namespace YamlHttpClient
                     string errorBody = await response.Content.ReadAsStringAsync(ct);
                     throw new InvalidOperationException(
                         $"External API call '{clientName}' failed with status code {(int)response.StatusCode} ({response.StatusCode}). " +
-                        $"URL: {calledUrl}. Response body: {errorBody}");
+                        $"Response body: {errorBody}");
                 }
 
                 var jsonResponse = await response.Content.ReadFromJsonAsync<JsonElement>(cancellationToken: ct);
