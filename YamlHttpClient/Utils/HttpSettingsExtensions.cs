@@ -1,5 +1,6 @@
 ﻿using HandlebarsDotNet;
 using Newtonsoft.Json;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Text;
 using YamlDotNet.Serialization;
@@ -12,7 +13,7 @@ namespace YamlHttpClient.Utils
     public static class YamlHttpClientConfigExtensions
     {
         /// <summary>
-        /// 
+        /// Load config from string
         /// </summary>
         /// <param name="yamlHttpClientConfig"></param>
         /// <param name="yamlToLoad"></param>
@@ -31,13 +32,7 @@ namespace YamlHttpClient.Utils
             return yamlHttpClientConfig.HttpClient[keyConfigName];
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="yamlHttpClientConfig"></param>
-        /// <param name="keyConfigName"></param>
-        /// <param name="yamlFile"></param>
-        /// <returns></returns>
+        [ExcludeFromCodeCoverage]
         public static HttpClientSettings LoadFromBytes(this YamlHttpClientConfigBuilder yamlHttpClientConfig, byte[] yamlFile, string keyConfigName)
         {
             var builder = new DeserializerBuilder()
@@ -51,13 +46,7 @@ namespace YamlHttpClient.Utils
             return yamlHttpClientConfig.HttpClient[keyConfigName];
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="yamlHttpClientConfig"></param>
-        /// <param name="keyConfigName"></param>
-        /// <param name="filePath"></param>
-        /// <returns></returns>
+        [ExcludeFromCodeCoverage]
         public static HttpClientSettings LoadFromFile(this YamlHttpClientConfigBuilder yamlHttpClientConfig, string filePath, string keyConfigName)
         {
             using (var configFile = new StreamReader(filePath))

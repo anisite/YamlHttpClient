@@ -1,6 +1,8 @@
 ﻿using HandlebarsDotNet;
 using Newtonsoft.Json;
 using System;
+using System.Collections;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
@@ -66,18 +68,18 @@ namespace YamlHttpClient.Utils
                     {
                         if (forceString && !flatten)
                         {
-                            if (values[0] is { })
+                            if (values[0] is { } first)
                             {
-                                Type t = values[0].GetType();
+                                Type t = first.GetType();
                                 bool isPrimitiveType = t.IsPrimitive || t.IsValueType || (t == typeof(string));
 
                                 if (isPrimitiveType)
                                 {
-                                    json = JsonConvert.SerializeObject(values[0]?.ToString(), jsonSerializerSettings);
+                                    json = JsonConvert.SerializeObject(first.ToString(), jsonSerializerSettings);
                                 }
                                 else
                                 {
-                                    json = JsonConvert.SerializeObject(values[0], jsonSerializerSettings);
+                                    json = JsonConvert.SerializeObject(first, jsonSerializerSettings);
                                     json = JsonConvert.ToString(json);
                                 }
                             }
@@ -97,22 +99,28 @@ namespace YamlHttpClient.Utils
                 }
                 else
                 {
-                    var concatStr = string.Empty;
-
+                    var sb = new System.Text.StringBuilder();
                     foreach (var item in values)
                     {
                         if (!(item is UndefinedBindingResult))
                         {
-                            concatStr += item?.ToString();
+                            sb.Append(item?.ToString());
                         }
                     }
-                    json = JsonConvert.SerializeObject(concatStr);
+                    json = JsonConvert.SerializeObject(sb.ToString());
                 }
 
                 if (flatten)
                 {
-                    var oo = JsonHelper.DeserializeAndFlatten(json, forceString, flatten_separator, flatten_index_surrounder);
-                    json = JsonConvert.SerializeObject(oo);
+                    if (string.IsNullOrWhiteSpace(json) || json.Trim().Equals("null", StringComparison.OrdinalIgnoreCase))
+                    {
+                        json = null;
+                    }
+                    else
+                    {
+                        var oo = JsonHelper.DeserializeAndFlatten(json, forceString, flatten_separator, flatten_index_surrounder);
+                        json = JsonConvert.SerializeObject(oo);
+                    }
                 }
 
                 output.Write(json);
@@ -153,6 +161,7 @@ namespace YamlHttpClient.Utils
             return hb;
         }
 
+
         public static IHandlebars AddIfCond(this IHandlebars hb, bool skipNull)
         {
             hb.RegisterHelper("ifCond", (writer, options, context, args) =>
@@ -182,14 +191,46 @@ namespace YamlHttpClient.Utils
                         writer.Write("ifCond:args[2] undefined");
                     }
                     return;
-
                 }
+
+                string operateur = args[1]?.ToString() ?? "==";
+
+                // Array handling for "contains" and "in"
+                if (args[0] is IEnumerable collection && args[0].GetType().Name != "String")
+                {
+                    if (operateur == "contains" || operateur == "in")
+                    {
+                        bool found = false;
+                        string searchVal = args[2].ToString()!;
+
+                        foreach (var item in collection)
+                        {
+                            if (item != null && item.ToString() == searchVal)
+                            {
+                                found = true;
+                                break;
+                            }
+                        }
+
+                        if (found)
+                        {
+                            options.Template(writer, context);
+                        }
+                        else
+                        {
+                            options.Inverse(writer, context);
+                        }
+
+                        return;
+                    }
+                }
+
                 if (args[0].GetType().Name == "String" || args[0].GetType().Name == "Char")
                 {
                     var val1 = args[0].ToString();
                     var val2 = args[2].ToString();
 
-                    switch (args[1].ToString())
+                    switch (operateur)
                     {
                         case ">":
                             if (val1!.Length > val2!.Length)
@@ -240,7 +281,7 @@ namespace YamlHttpClient.Utils
                     object val1 = args[0];
                     object val2 = args[2];
 
-                    switch (args[1].ToString())
+                    switch (operateur)
                     {
                         case ">":
                             if (float.Parse(val1.ToString()!) > float.Parse(val2.ToString()!))
@@ -289,6 +330,33 @@ namespace YamlHttpClient.Utils
             });
 
             return hb;
+        }
+
+        // Le dictionnaire statique vit ici. Il sera partagé par toute l'application.
+        private static readonly ConcurrentDictionary<string, HandlebarsTemplate<object, object>> _templateCache = new ConcurrentDictionary<string, HandlebarsTemplate<object, object>>();
+
+        /// <summary>
+        /// Compile un template Handlebars ou récupère sa version déjà compilée en cache.
+        /// </summary>
+        /// <param name="handlebars">L'instance IHandlebars courante</param>
+        /// <param name="template">Le template textuel brut à compiler</param>
+        /// <returns>La fonction compilée prête à recevoir des données</returns>
+        public static HandlebarsTemplate<object, object> CompileWithCache(this IHandlebars handlebars, string? template)
+        {
+            if (string.IsNullOrWhiteSpace(template))
+            {
+                return (context, data) => string.Empty;
+            }
+
+            return _templateCache.GetOrAdd(template, tpl => handlebars.Compile(tpl));
+        }
+
+        /// <summary>
+        /// Permet de vider le cache manuellement (utile pour des rechargements à chaud de configuration)
+        /// </summary>
+        public static void ClearTemplateCache()
+        {
+            _templateCache.Clear();
         }
     }
 }

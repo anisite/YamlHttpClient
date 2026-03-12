@@ -4,6 +4,8 @@ using System.Collections.Generic;
 using Xunit;
 using YamlHttpClient.Utils;
 
+[assembly: CollectionBehavior(DisableTestParallelization = true)]
+
 namespace YamlHttpClient.Tests
 {
 
@@ -60,6 +62,27 @@ namespace YamlHttpClient.Tests
                 arg1 = new DateTime(2020, 02, 02),
                 arg2 = new DateTime(2020, 02, 02),
                 arg3 = 'M'
+            };
+
+            var result = new ContentHandler(YamlHttpClientFactory
+                .CreateEmptyHandleBars()
+                .AddJsonHelper(new Newtonsoft.Json.JsonSerializerSettings() { DateFormatString = "yyyy-MM-dd", })
+                .AddIfCond(true)
+                .AddBase64())
+                .ParseContent(input, testObject);
+
+            Assert.Equal(expected, result);
+        }
+
+        [Theory]
+        [InlineData("{{#ifCond contact 'contains' 'Telephone'}}oui{{else}}non{{/ifCond}}", @"oui")]
+        [InlineData("{{#ifCond contact 'in' 'Telephone'}}oui{{else}}non{{/ifCond}}", @"oui")]
+        [InlineData("{{#ifCond contact 'in' 'Cellulaire'}}oui{{else}}non{{/ifCond}}", @"non")]
+        public void IfCond_Array_HandleBars_Formatters(string input, string expected)
+        {
+            var testObject = new
+            {
+                contact = new object[] { "Telephone", "Fax" },
             };
 
             var result = new ContentHandler(YamlHttpClientFactory

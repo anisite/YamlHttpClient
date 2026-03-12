@@ -1,24 +1,8 @@
 ﻿using HandlebarsDotNet;
-using HandlebarsDotNet.IO;
-using Newtonsoft.Json;
 using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
-using System.Numerics;
-using System.Runtime.CompilerServices;
-using System.Runtime.Serialization.Formatters.Binary;
-using System.Security.Cryptography;
 using System.Text;
-using System.Threading.Tasks;
-using YamlDotNet.Serialization;
-using YamlDotNet.Serialization.NamingConventions;
-using YamlHttpClient.Exceptions;
-using YamlHttpClient.Factory;
-using YamlHttpClient.Interfaces;
 using YamlHttpClient.Settings;
 using YamlHttpClient.Utils;
 
@@ -45,8 +29,11 @@ namespace YamlHttpClient
         /// <param name="data"></param>
         /// <param name="contentSettings"></param>
         /// <returns></returns>
-        public HttpContent? Content(dynamic data, ContentSettings contentSettings)
+        public HttpContent? Content(dynamic data, ContentSettings? contentSettings)
         {
+            if (contentSettings is null)
+                return null;
+
             // String Content
             if (contentSettings.StringContent is { })
             {
@@ -62,16 +49,19 @@ namespace YamlHttpClient
                 return new StringContent(result, Encoding.GetEncoding(contentSettings.Encoding ?? "UTF-8"), "application/json");
             }
             // Form Content
-            else if (contentSettings.FormContent is { })
+            else if (contentSettings.FormContent is { } formContent)
             {
-                return new FormUrlEncodedContent(contentSettings.FormContent);
+                return new FormUrlEncodedContent(formContent!);
             }
             // Stream Content
             else if (contentSettings.Base64Content is { })
             {
                 byte[] b = Convert.FromBase64String(ParseContent(contentSettings.Base64Content, data));
                 var byteArrayContent = new ByteArrayContent(b);
-                byteArrayContent.Headers.ContentType = new MediaTypeHeaderValue(contentSettings.ContentType);
+
+                if (contentSettings.ContentType is { } contentType)
+                    byteArrayContent.Headers.ContentType = new MediaTypeHeaderValue(contentType);
+
                 return byteArrayContent;
             }
             // multipart Content
@@ -111,7 +101,7 @@ namespace YamlHttpClient
         /// <returns></returns>
         public string ParseContent(string? contentTemplate, dynamic data)
         {
-            var template = _handlebars.Compile(contentTemplate ?? string.Empty);
+            var template = _handlebars.CompileWithCache(contentTemplate);
             var result = template(data);
             return result;
         }
