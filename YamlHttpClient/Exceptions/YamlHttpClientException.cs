@@ -1,7 +1,9 @@
 ﻿using System;
+using System.Diagnostics.CodeAnalysis;
 
 namespace YamlHttpClient.Exceptions
 {
+    [ExcludeFromCodeCoverage]
     public class YamlHttpClientException : Exception
     {
         public YamlHttpClientException()

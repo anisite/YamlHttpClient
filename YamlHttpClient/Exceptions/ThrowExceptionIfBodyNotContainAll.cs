@@ -1,9 +1,11 @@
 ﻿using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.Serialization;
 
 namespace YamlHttpClient.Exceptions
 {
     [Serializable]
+    [ExcludeFromCodeCoverage]
     public class ThrowExceptionIfBodyNotContainAll : Exception
     {
         public ThrowExceptionIfBodyNotContainAll()

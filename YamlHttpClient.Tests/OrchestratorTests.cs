@@ -358,7 +358,153 @@ namespace YamlHttpClient.Tests
 
             Assert.AreEqual(0, orch.LastCalledUrls.Count);
         }
+
+
+        // ---------------------------------------------------------------------
+        // Validation des arguments de ExecuteSetAsync
+        // ---------------------------------------------------------------------
+
+        [TestMethod]
+        [ExpectedException(typeof(ArgumentNullException))]
+        public async Task ExecuteSetAsync_ThrowsWhenSetNameIsNull()
+        {
+            var hb = YamlHttpClientFactory.CreateDefaultHandleBars();
+            var orch = new YamlHttpOrchestrator(hb);
+            var config = new YamlHttpClientConfigBuilder();
+
+            await orch.ExecuteSetAsync(null!, config, new { });
+        }
+
+        [TestMethod]
+        [ExpectedException(typeof(ArgumentNullException))]
+        public async Task ExecuteSetAsync_ThrowsWhenSetNameIsWhitespace()
+        {
+            var hb = YamlHttpClientFactory.CreateDefaultHandleBars();
+            var orch = new YamlHttpOrchestrator(hb);
+            var config = new YamlHttpClientConfigBuilder();
+
+            await orch.ExecuteSetAsync("   ", config, new { });
+        }
+
+        [TestMethod]
+        [ExpectedException(typeof(ArgumentNullException))]
+        public async Task ExecuteSetAsync_ThrowsWhenConfigIsNull()
+        {
+            var hb = YamlHttpClientFactory.CreateDefaultHandleBars();
+            var orch = new YamlHttpOrchestrator(hb);
+
+            await orch.ExecuteSetAsync("mySet", null!, new { });
+        }
+
+        [TestMethod]
+        [ExpectedException(typeof(InvalidOperationException))]
+        public async Task ExecuteSetAsync_ThrowsWhenSetNameNotFound()
+        {
+            var hb = YamlHttpClientFactory.CreateDefaultHandleBars();
+            var orch = new YamlHttpOrchestrator(hb);
+            var config = new YamlHttpClientConfigBuilder
+            {
+                HttpClientSet = new Dictionary<string, HttpClientSetSettings>(), // set vide
+                HttpClient = new Dictionary<string, HttpClientSettings>()
+            };
+
+            await orch.ExecuteSetAsync("nonexistent_set", config, new { });
+        }
+
+        [TestMethod]
+        public async Task ExecuteSetAsync_ErrorMessage_ContainsSetName()
+        {
+            var hb = YamlHttpClientFactory.CreateDefaultHandleBars();
+            var orch = new YamlHttpOrchestrator(hb);
+            var config = new YamlHttpClientConfigBuilder
+            {
+                HttpClientSet = new Dictionary<string, HttpClientSetSettings>(),
+                HttpClient = new Dictionary<string, HttpClientSettings>()
+            };
+
+            try
+            {
+                await orch.ExecuteSetAsync("missing_pipeline", config, new { });
+                Assert.Fail("Une exception était attendue.");
+            }
+            catch (InvalidOperationException ex)
+            {
+                StringAssert.Contains(ex.Message, "missing_pipeline");
+            }
+        }
+
+        [TestMethod]
+        [ExpectedException(typeof(InvalidOperationException))]
+        public async Task ExecuteSetAsync_ThrowsWhenHttpClientConfigIsNull()
+        {
+            var hb = YamlHttpClientFactory.CreateDefaultHandleBars();
+            var orch = new YamlHttpOrchestrator(hb);
+            var config = new YamlHttpClientConfigBuilder
+            {
+                HttpClientSet = new Dictionary<string, HttpClientSetSettings>
+                {
+                    ["mySet"] = new HttpClientSetSettings
+                    {
+                        Sequence = new List<SequenceStepSettings>()
+                    }
+                },
+                HttpClient = null // pas de définitions de clients
+            };
+
+            await orch.ExecuteSetAsync("mySet", config, new { });
+        }
+
+        // ---------------------------------------------------------------------
+        // Séquence vide — délégation à ExecuteSequenceAsync
+        // ---------------------------------------------------------------------
+
+        [TestMethod]
+        public async Task ExecuteSetAsync_EmptySequence_ReturnsSerializedInput()
+        {
+            var hb = YamlHttpClientFactory.CreateDefaultHandleBars();
+            var orch = new YamlHttpOrchestrator(hb);
+            var config = new YamlHttpClientConfigBuilder
+            {
+                HttpClientSet = new Dictionary<string, HttpClientSetSettings>
+                {
+                    ["mySet"] = new HttpClientSetSettings
+                    {
+                        Sequence = new List<SequenceStepSettings>()
+                    }
+                },
+                HttpClient = new Dictionary<string, HttpClientSettings>()
+            };
+
+            var result = await orch.ExecuteSetAsync("mySet", config, new { name = "test" });
+
+            var json = JsonDocument.Parse(result);
+            Assert.IsTrue(json.RootElement.TryGetProperty("input", out _));
+        }
+
+        [TestMethod]
+        public async Task ExecuteSetAsync_WithDataAdapterTemplate_AppliesTemplate()
+        {
+            var hb = YamlHttpClientFactory.CreateDefaultHandleBars();
+            var orch = new YamlHttpOrchestrator(hb);
+            var config = new YamlHttpClientConfigBuilder
+            {
+                HttpClientSet = new Dictionary<string, HttpClientSetSettings>
+                {
+                    ["mySet"] = new HttpClientSetSettings
+                    {
+                        Sequence = new List<SequenceStepSettings>(),
+                        DataAdapter = new DataAdapterSettings { Template = "Hello {{input.name}}" }
+                    }
+                },
+                HttpClient = new Dictionary<string, HttpClientSettings>()
+            };
+
+            var result = await orch.ExecuteSetAsync("mySet", config, new { name = "World" });
+
+            Assert.AreEqual("Hello World", result);
+        }
     }
 }
+
 
 #endif

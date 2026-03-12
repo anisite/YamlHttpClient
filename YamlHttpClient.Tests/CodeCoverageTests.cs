@@ -804,6 +804,70 @@ namespace YamlHttpClient.Tests
         }
 
         [TestMethod]
+        public void GetProxiedHttpClient_ReturnsSameInstanceForSameProxy()
+        {
+            var settings = new HttpClientSettings
+            {
+                Method = "GET",
+                Url = "http://localhost/proxy"
+            };
+            var factory = new YamlHttpClientFactory(settings);
+
+            var client1 = factory.GetProxiedHttpClient("http://proxy:8080");
+            var client2 = factory.GetProxiedHttpClient("http://proxy:8080");
+
+            Assert.AreSame(client1, client2);
+        }
+
+        [TestMethod]
+        public void GetProxiedHttpClient_ReturnsDifferentInstancesForDifferentProxies()
+        {
+            var settings = new HttpClientSettings
+            {
+                Method = "GET",
+                Url = "http://localhost/proxy"
+            };
+            var factory = new YamlHttpClientFactory(settings);
+
+            var client1 = factory.GetProxiedHttpClient("http://proxy1:8080");
+            var client2 = factory.GetProxiedHttpClient("http://proxy2:9090");
+
+            Assert.AreNotSame(client1, client2);
+        }
+
+        [TestMethod]
+        public void GetProxiedHttpClient_ReturnsDifferentInstanceFromNonProxiedClient()
+        {
+            var settings = new HttpClientSettings
+            {
+                Method = "GET",
+                Url = "http://localhost/proxy"
+            };
+            var factory = new YamlHttpClientFactory(settings);
+
+            var proxiedClient = factory.GetProxiedHttpClient("http://proxy:8080");
+            var normalClient = factory.GetHttpClient();
+
+            Assert.AreNotSame(proxiedClient, normalClient);
+        }
+
+        [TestMethod]
+        public void GetProxiedHttpClient_ReturnsHttpClientInstance()
+        {
+            var settings = new HttpClientSettings
+            {
+                Method = "GET",
+                Url = "http://localhost/proxy"
+            };
+            var factory = new YamlHttpClientFactory(settings);
+
+            var client = factory.GetProxiedHttpClient("http://proxy:8080");
+
+            Assert.IsNotNull(client);
+            Assert.IsInstanceOfType(client, typeof(HttpClient));
+        }
+
+        [TestMethod]
         public void GetProxiedHttpClient_ThrowsOnEmptyProxy()
         {
             var settings = new HttpClientSettings
