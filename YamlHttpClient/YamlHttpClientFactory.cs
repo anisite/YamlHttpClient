@@ -23,6 +23,11 @@ namespace YamlHttpClient
         private readonly IContentHandler _contentHandler;
 
         /// <summary>
+        /// Last resolved URL after Handlebars compilation (useful for logging, debugging, etc.)
+        /// </summary>
+        public string? LastResolvedUrl { get; private set; }
+
+        /// <summary>
         /// Config
         /// </summary>
         public HttpClientSettings HttpClientSettings { get; set; }
@@ -115,8 +120,10 @@ namespace YamlHttpClient
         {
             try
             {
-                var msg = new HttpRequestMessage(new HttpMethod(HttpClientSettings.Method),
-                                                            SS(HttpClientSettings.Url, data));
+                var resolvedUrl = SS(HttpClientSettings.Url, data);
+                LastResolvedUrl = resolvedUrl;
+
+                var msg = new HttpRequestMessage(new HttpMethod(HttpClientSettings.Method), resolvedUrl);
 
                 msg.Content = (_contentHandler ?? new ContentHandler(HandlebarsProvider)).Content(data, HttpClientSettings.Content);
 
@@ -362,9 +369,9 @@ namespace YamlHttpClient
         /// <returns></returns>
         public Task<HttpResponseMessage> AutoCallAsync(dynamic data, CancellationToken cancellationToken)
         {
+            LastResolvedUrl = SS(HttpClientSettings.Url, data);
             return SendAsync(() => BuildRequestMessage(data), cancellationToken);
         }
-
 
         /// <summary>
         /// Check response from check_response settings in yaml config

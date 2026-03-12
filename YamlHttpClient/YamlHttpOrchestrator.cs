@@ -59,10 +59,11 @@ namespace YamlHttpClient
                 clientDef.Retry ??= _options.DefaultRetrySettings;
 
                 var client = new YamlHttpClientFactory(clientDef, defaultHttpTimeout ?? TimeSpan.FromSeconds(30), _handlebarsEngine);
+               
                 HttpResponseMessage response = await client.AutoCallAsync(aggregatedData, ct);
 
                 // Capturer l'URL réellement appelée
-                var calledUrl = response.RequestMessage?.RequestUri?.ToString() ?? clientName;
+                var calledUrl = client.LastResolvedUrl ?? clientName;
                 calledUrls.Add(calledUrl);
 
                 if (!response.IsSuccessStatusCode)
