@@ -338,6 +338,35 @@ namespace YamlHttpClient
             }
 
             // ==========================================
+            // MOCK MODE: Return a fake response without any network call
+            // ==========================================
+            var mock = HttpClientSettings.Mock;
+            if (mock?.Enabled == true)
+            {
+                var mockResponse = new HttpResponseMessage((System.Net.HttpStatusCode)mock.StatusCode);
+
+                if (mock.Body != null)
+                {
+                    mockResponse.Content = new StringContent(mock.Body, System.Text.Encoding.UTF8, "application/json");
+                }
+
+                if (mock.Headers != null)
+                {
+                    foreach (var header in mock.Headers)
+                    {
+                        // Try response headers first, then content headers
+                        if (!mockResponse.Headers.TryAddWithoutValidation(header.Key, header.Value))
+                        {
+                            mockResponse.Content?.Headers.TryAddWithoutValidation(header.Key, header.Value);
+                        }
+                    }
+                }
+
+                return mockResponse;
+            }
+
+
+            // ==========================================
             // NORMAL CALL (If the monkey hasn't struck)
             // ==========================================
             var client = GetHttpClient();
@@ -372,35 +401,6 @@ namespace YamlHttpClient
         public Task<HttpResponseMessage> AutoCallAsync(dynamic data, CancellationToken cancellationToken)
         {
             LastResolvedUrl = SS(HttpClientSettings.Url, data);
-
-            // ==========================================
-            // MOCK MODE: Return a fake response without any network call
-            // ==========================================
-            var mock = HttpClientSettings.Mock;
-            if (mock?.Enabled == true)
-            {
-                var mockResponse = new HttpResponseMessage((System.Net.HttpStatusCode)mock.StatusCode);
-
-                if (mock.Body != null)
-                {
-                    var resolvedBody = SS(mock.Body, data);
-                    mockResponse.Content = new StringContent(resolvedBody, System.Text.Encoding.UTF8, "application/json");
-                }
-
-                if (mock.Headers != null)
-                {
-                    foreach (var header in mock.Headers)
-                    {
-                        // Try response headers first, then content headers
-                        if (!mockResponse.Headers.TryAddWithoutValidation(header.Key, SS(header.Value, data)))
-                        {
-                            mockResponse.Content?.Headers.TryAddWithoutValidation(header.Key, SS(header.Value, data));
-                        }
-                    }
-                }
-
-                return Task.FromResult(mockResponse);
-            }
 
             return SendAsync(() => BuildRequestMessage(data), cancellationToken);
         }

@@ -541,31 +541,6 @@ namespace YamlHttpClient.Tests
         }
 
         [TestMethod]
-        public async Task MockMode_SupportsHandlebarsInBody()
-        {
-            var hb = YamlHttpClientFactory.CreateDefaultHandleBars();
-            var settings = new HttpClientSettings
-            {
-                Method = "POST",
-                Url = "https://api.fake.local/users",
-                Mock = new MockSettings
-                {
-                    Enabled = true,
-                    StatusCode = 201,
-                    Body = "{\"greeting\": \"Hello {{input.name}}\"}"
-                }
-            };
-
-            var factory = new YamlHttpClientFactory(settings, TimeSpan.FromSeconds(5), hb);
-            var data = new Dictionary<string, object> { { "input", new { name = "Alice" } } };
-            var response = await factory.AutoCallAsync(data, CancellationToken.None);
-
-            Assert.AreEqual(System.Net.HttpStatusCode.Created, response.StatusCode);
-            var body = await response.Content.ReadAsStringAsync();
-            Assert.IsTrue(body.Contains("Hello Alice"));
-        }
-
-        [TestMethod]
         public async Task MockMode_ReturnsCustomStatusCode()
         {
             var hb = YamlHttpClientFactory.CreateDefaultHandleBars();
