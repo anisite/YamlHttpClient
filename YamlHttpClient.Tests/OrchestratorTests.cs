@@ -607,7 +607,7 @@ namespace YamlHttpClient.Tests
             var response = await factory.AutoCallAsync(new { }, CancellationToken.None);
 
             Assert.AreEqual(System.Net.HttpStatusCode.NoContent, response.StatusCode);
-            Assert.IsNull(response.Content);
+            Assert.AreEqual(string.Empty, await response.Content.ReadAsStringAsync());
         }
 
         [TestMethod]

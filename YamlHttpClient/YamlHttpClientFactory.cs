@@ -1,4 +1,5 @@
 ﻿using HandlebarsDotNet;
+using HandlebarsDotNet.Extension.Json;
 using Microsoft.Extensions.Caching.Memory;
 using System;
 using System.Linq;
@@ -81,6 +82,7 @@ namespace YamlHttpClient
             hb.AddJsonHelper();
             hb.AddBase64();
             hb.AddIfCond(false);
+            hb.Configuration.UseJson();
             return hb;
         });
 
