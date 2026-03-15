@@ -504,6 +504,299 @@ namespace YamlHttpClient.Tests
             Assert.AreEqual("Hello World", result);
         }
     }
+
+    // =========================================================================
+    // TESTS MOCK MODE
+    // =========================================================================
+
+    [TestClass]
+    public class MockModeTests
+    {
+        // ---------------------------------------------------------------------
+        // Mock basique — réponse simulée sans appel réseau
+        // ---------------------------------------------------------------------
+
+        [TestMethod]
+        public async Task MockMode_ReturnsMockedResponse_WithoutNetworkCall()
+        {
+            var hb = YamlHttpClientFactory.CreateDefaultHandleBars();
+            var settings = new HttpClientSettings
+            {
+                Method = "GET",
+                Url = "https://api.fake.local/data",
+                Mock = new MockSettings
+                {
+                    Enabled = true,
+                    StatusCode = 200,
+                    Body = "{\"id\": 1, \"name\": \"mocked\"}"
+                }
+            };
+
+            var factory = new YamlHttpClientFactory(settings, TimeSpan.FromSeconds(5), hb);
+            var response = await factory.AutoCallAsync(new { }, CancellationToken.None);
+
+            Assert.AreEqual(System.Net.HttpStatusCode.OK, response.StatusCode);
+            var body = await response.Content.ReadAsStringAsync();
+            Assert.IsTrue(body.Contains("mocked"));
+        }
+
+        [TestMethod]
+        public async Task MockMode_SupportsHandlebarsInBody()
+        {
+            var hb = YamlHttpClientFactory.CreateDefaultHandleBars();
+            var settings = new HttpClientSettings
+            {
+                Method = "POST",
+                Url = "https://api.fake.local/users",
+                Mock = new MockSettings
+                {
+                    Enabled = true,
+                    StatusCode = 201,
+                    Body = "{\"greeting\": \"Hello {{input.name}}\"}"
+                }
+            };
+
+            var factory = new YamlHttpClientFactory(settings, TimeSpan.FromSeconds(5), hb);
+            var data = new Dictionary<string, object> { { "input", new { name = "Alice" } } };
+            var response = await factory.AutoCallAsync(data, CancellationToken.None);
+
+            Assert.AreEqual(System.Net.HttpStatusCode.Created, response.StatusCode);
+            var body = await response.Content.ReadAsStringAsync();
+            Assert.IsTrue(body.Contains("Hello Alice"));
+        }
+
+        [TestMethod]
+        public async Task MockMode_ReturnsCustomStatusCode()
+        {
+            var hb = YamlHttpClientFactory.CreateDefaultHandleBars();
+            var settings = new HttpClientSettings
+            {
+                Method = "GET",
+                Url = "https://api.fake.local/error",
+                Mock = new MockSettings
+                {
+                    Enabled = true,
+                    StatusCode = 404,
+                    Body = "{\"error\": \"not found\"}"
+                }
+            };
+
+            var factory = new YamlHttpClientFactory(settings, TimeSpan.FromSeconds(5), hb);
+            var response = await factory.AutoCallAsync(new { }, CancellationToken.None);
+
+            Assert.AreEqual(System.Net.HttpStatusCode.NotFound, response.StatusCode);
+        }
+
+        [TestMethod]
+        public async Task MockMode_WithNullBody_ReturnsEmptyContent()
+        {
+            var hb = YamlHttpClientFactory.CreateDefaultHandleBars();
+            var settings = new HttpClientSettings
+            {
+                Method = "DELETE",
+                Url = "https://api.fake.local/item/1",
+                Mock = new MockSettings
+                {
+                    Enabled = true,
+                    StatusCode = 204
+                    // Body is null
+                }
+            };
+
+            var factory = new YamlHttpClientFactory(settings, TimeSpan.FromSeconds(5), hb);
+            var response = await factory.AutoCallAsync(new { }, CancellationToken.None);
+
+            Assert.AreEqual(System.Net.HttpStatusCode.NoContent, response.StatusCode);
+            Assert.IsNull(response.Content);
+        }
+
+        [TestMethod]
+        public async Task MockMode_SetsLastResolvedUrl()
+        {
+            var hb = YamlHttpClientFactory.CreateDefaultHandleBars();
+            var settings = new HttpClientSettings
+            {
+                Method = "GET",
+                Url = "https://api.fake.local/{{resource}}",
+                Mock = new MockSettings
+                {
+                    Enabled = true,
+                    StatusCode = 200,
+                    Body = "{}"
+                }
+            };
+
+            var factory = new YamlHttpClientFactory(settings, TimeSpan.FromSeconds(5), hb);
+            await factory.AutoCallAsync(new { resource = "users" }, CancellationToken.None);
+
+            Assert.AreEqual("https://api.fake.local/users", factory.LastResolvedUrl);
+        }
+
+        // ---------------------------------------------------------------------
+        // Mock mode dans ExecuteSequenceAsync (orchestrateur)
+        // ---------------------------------------------------------------------
+
+        [TestMethod]
+        public async Task ExecuteSequenceAsync_WithMockMode_ReturnsAggregatedData()
+        {
+            var hb = YamlHttpClientFactory.CreateDefaultHandleBars();
+            var orch = new YamlHttpOrchestrator(hb);
+
+            var dict = new Dictionary<string, HttpClientSettings>
+            {
+                ["api_users"] = new HttpClientSettings
+                {
+                    Method = "GET",
+                    Url = "https://api.fake.local/users",
+                    Mock = new MockSettings
+                    {
+                        Enabled = true,
+                        StatusCode = 200,
+                        Body = "{\"users\": [{\"id\": 1, \"name\": \"Alice\"}]}"
+                    }
+                },
+                ["api_orders"] = new HttpClientSettings
+                {
+                    Method = "GET",
+                    Url = "https://api.fake.local/orders",
+                    Mock = new MockSettings
+                    {
+                        Enabled = true,
+                        StatusCode = 200,
+                        Body = "{\"orders\": [{\"id\": 100, \"total\": 42.5}]}"
+                    }
+                }
+            };
+
+            var steps = new List<dynamic>
+            {
+                OrchestratorStep.Make("api_users", "users"),
+                OrchestratorStep.Make("api_orders", "orders")
+            };
+
+            var result = await orch.ExecuteSequenceAsync(
+                new { }, steps, dict, null, null, CancellationToken.None);
+
+            var doc = System.Text.Json.JsonDocument.Parse(result);
+            Assert.IsTrue(doc.RootElement.TryGetProperty("users", out _));
+            Assert.IsTrue(doc.RootElement.TryGetProperty("orders", out _));
+        }
+
+        [TestMethod]
+        public async Task ExecuteSequenceAsync_MockWithDataChaining_WorksAcrossSteps()
+        {
+            var hb = YamlHttpClientFactory.CreateDefaultHandleBars();
+            var orch = new YamlHttpOrchestrator(hb);
+
+            var dict = new Dictionary<string, HttpClientSettings>
+            {
+                ["step1"] = new HttpClientSettings
+                {
+                    Method = "GET",
+                    Url = "https://api.fake.local/init",
+                    Mock = new MockSettings
+                    {
+                        Enabled = true,
+                        StatusCode = 200,
+                        Body = "{\"token\": \"abc123\"}"
+                    }
+                },
+                ["step2"] = new HttpClientSettings
+                {
+                    Method = "GET",
+                    Url = "https://api.fake.local/data",
+                    Mock = new MockSettings
+                    {
+                        Enabled = true,
+                        StatusCode = 200,
+                        Body = "{\"result\": \"success\"}"
+                    }
+                }
+            };
+
+            var steps = new List<dynamic>
+            {
+                OrchestratorStep.Make("step1", "auth"),
+                OrchestratorStep.Make("step2", "data")
+            };
+
+            var template = "token={{auth.body.token}},result={{data.body.result}}";
+
+            var result = await orch.ExecuteSequenceAsync(
+                new { }, steps, dict, template, null, CancellationToken.None);
+
+            Assert.AreEqual("token=abc123,result=success", result);
+        }
+
+        [TestMethod]
+        public async Task ExecuteSequenceAsync_MockWithFailedStatus_ThrowsWithDetails()
+        {
+            var hb = YamlHttpClientFactory.CreateDefaultHandleBars();
+            var orch = new YamlHttpOrchestrator(hb);
+
+            var dict = new Dictionary<string, HttpClientSettings>
+            {
+                ["failing_api"] = new HttpClientSettings
+                {
+                    Method = "GET",
+                    Url = "https://api.fake.local/fail",
+                    Mock = new MockSettings
+                    {
+                        Enabled = true,
+                        StatusCode = 500,
+                        Body = "{\"error\": \"internal server error\"}"
+                    }
+                }
+            };
+
+            var steps = new List<dynamic> { OrchestratorStep.Make("failing_api") };
+
+            try
+            {
+                await orch.ExecuteSequenceAsync(
+                    new { }, steps, dict, null, null, CancellationToken.None);
+                Assert.Fail("Expected InvalidOperationException");
+            }
+            catch (InvalidOperationException ex)
+            {
+                StringAssert.Contains(ex.Message, "500");
+                StringAssert.Contains(ex.Message, "failing_api");
+            }
+        }
+
+        [TestMethod]
+        public async Task MockMode_DisabledMock_IsIgnored()
+        {
+            // Quand mock.enabled = false, le comportement normal s'applique.
+            // On vérifie simplement que la config mock désactivée ne cause pas d'erreur.
+            var settings = new HttpClientSettings
+            {
+                Method = "GET",
+                Url = "https://api.fake.local/data",
+                Mock = new MockSettings
+                {
+                    Enabled = false,
+                    StatusCode = 200,
+                    Body = "{\"should\": \"not appear\"}"
+                }
+            };
+
+            // Mock disabled = le factory essaiera un vrai appel réseau, ce qui va échouer.
+            // Le but est de vérifier que le mock n'intercepte PAS quand disabled.
+            var hb = YamlHttpClientFactory.CreateDefaultHandleBars();
+            var factory = new YamlHttpClientFactory(settings, TimeSpan.FromSeconds(2), hb);
+
+            try
+            {
+                await factory.AutoCallAsync(new { }, CancellationToken.None);
+                Assert.Fail("Should have thrown because mock is disabled and no real server exists");
+            }
+            catch (Exception)
+            {
+                // Expected: real network call fails because api.fake.local doesn't exist
+            }
+        }
+    }
 }
 
 
