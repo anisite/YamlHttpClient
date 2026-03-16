@@ -15,6 +15,7 @@ Download from NuGet: https://www.nuget.org/packages/YamlHttpClient/
 - [Retry](#retry)
 - [Cache](#cache)
 - [Chaos Monkey](#chaos-monkey)
+- [Mock](#mock)
 - [Orchestrator](#orchestrator)
 - [Handlebars helpers](#handlebars-helpers)
 - [Features checklist](#features-checklist)
@@ -120,6 +121,13 @@ http_client:
       delay_milliseconds: 200
       simulate_status_code: 503
       simulate_network_exception: false
+
+    mock:
+      enabled: false
+      status_code: 200
+      headers:
+        Content-Type: 'application/json'
+      body: '{ "result": "mocked" }'
 ```
 
 ---
@@ -293,6 +301,94 @@ http_client:
       retry_on_status_codes:
         - 503
 ```
+
+---
+
+## Mock
+
+Mock lets you return a predefined HTTP response directly from the YAML configuration, without making any real network call. This is useful during development, integration testing, or when an external API is not yet available.
+
+```yaml
+http_client:
+  myMockedCall:
+    method: GET
+    url: https://api.example.com/users
+    mock:
+      enabled: true
+      status_code: 200
+      headers:
+        Content-Type: 'application/json'
+        X-Custom-Header: 'mock-value'
+      body: |
+        {
+          "users": [
+            { "id": 1, "name": "Alice" },
+            { "id": 2, "name": "Bob" }
+          ]
+        }
+```
+
+When `mock.enabled` is `true`, calling `AutoCallAsync` or `SendAsync` skips the HTTP call entirely and returns a fabricated `HttpResponseMessage` with the specified status code, headers, and body.
+
+| Option | Default | Description |
+|---|---|---|
+| `enabled` | `false` | Enables or disables the mock response |
+| `status_code` | `200` | The HTTP status code to return |
+| `headers` | _(none)_ | Response headers to include |
+| `body` | _(empty)_ | The response body content |
+
+```csharp
+var settings = new YamlHttpClientConfigBuilder().LoadFromFile("config.yml", "myMockedCall");
+var httpClient = new YamlHttpClientFactory(settings);
+
+// No network call is made — the mock response is returned immediately
+var response = await httpClient.AutoCallAsync(myData);
+var content = await response.Content.ReadAsStringAsync();
+// content = { "users": [ { "id": 1, "name": "Alice" }, ... ] }
+```
+
+Mock works seamlessly with `check_response`, so you can validate your mock responses against the same rules used in production:
+
+```yaml
+http_client:
+  myMockedCall:
+    method: GET
+    url: https://api.example.com/users
+    mock:
+      enabled: true
+      status_code: 200
+      body: '{ "status": "success", "data": [] }'
+    check_response:
+      throw_exception_if_body_not_contains_all:
+        - success
+```
+
+Mock can also be combined with the orchestrator — individual steps in a pipeline can be mocked independently, which is useful when only some external APIs are available:
+
+```yaml
+http_client_set:
+  user_pipeline:
+    sequence:
+      - http_client: get_token
+      - http_client: get_users
+
+http_client:
+  get_token:
+    method: POST
+    url: https://auth.example.com/token
+    mock:
+      enabled: true
+      status_code: 200
+      body: '{ "access_token": "fake-token-for-dev" }'
+
+  get_users:
+    method: GET
+    url: https://api.example.com/users
+    headers:
+      Authorization: 'Bearer {{get_token.body.access_token}}'
+```
+
+> Tip: Use mock to prototype your YAML pipelines before the real APIs are deployed. Once ready, simply set `mock.enabled: false` (or remove the `mock` block) to switch to live calls.
 
 ---
 
@@ -518,6 +614,7 @@ Templates are compiled once and cached automatically via `CompileWithCache`. Cal
 - :white_check_mark: Automatic retry with configurable status codes and delay
 - :white_check_mark: In-memory response cache with TTL
 - :white_check_mark: Chaos Monkey (delay, fake status code, network exception simulation)
+- :white_check_mark: Mock responses (return predefined responses without network calls)
 - :white_check_mark: Multi-step HTTP orchestration with data aggregation (`YamlHttpOrchestrator`, .NET 6+)
 - :white_check_mark: Dependency injection support (`IYamlHttpClientAccessor`)
 - :white_large_square: NTLM with explicit user/password
