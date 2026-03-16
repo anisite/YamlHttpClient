@@ -335,7 +335,7 @@ When `mock.enabled` is `true`, calling `AutoCallAsync` or `SendAsync` skips the 
 | `enabled` | `false` | Enables or disables the mock response |
 | `status_code` | `200` | The HTTP status code to return |
 | `headers` | _(none)_ | Response headers to include |
-| `body` | _(empty)_ | The response body content (supports Handlebars templating) |
+| `body` | _(empty)_ | The response body content |
 
 ```csharp
 var settings = new YamlHttpClientConfigBuilder().LoadFromFile("config.yml", "myMockedCall");
